@@ -24,6 +24,12 @@ form {
     width: 100%;
 }
 
+.form-grupo {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
 #titulo-form {
     text-align: center;
     font-size: 24px;
