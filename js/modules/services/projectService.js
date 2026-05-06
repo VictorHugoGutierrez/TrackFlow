@@ -1,53 +1,121 @@
-import { db, auth } from '../../config/firebase.js';
-import { 
-    collection, 
-    addDoc, 
-    getDocs, 
-    query, 
-    where, 
-    deleteDoc, 
-    doc 
+import { db, auth } from "../../config/firebase.js";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  query,
+  where,
+  doc,
+  updateDoc,
+  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
 export const projectService = {
-    async create(nome, clientId = null, orcamentoHoras = 0) {
-        try {
-            const docRef = await addDoc(collection(db, "projects"), {
-                user_id: auth.currentUser.uid,
-                client_id: clientId, 
-                nome: nome,
-                orcamento_horas: Number(orcamentoHoras),
-                status: "em_andamento",
-                criado_em: new Date().toISOString()
-            });
-            return docRef.id;
-        } catch (error) {
-            console.error("Erro ao criar projeto:", error);
-            throw error;
-        }
-    },
+  async create(nome, clientId = null, orcamentoHoras = null) {
+    try {
+      const horas =
+        orcamentoHoras !== null && orcamentoHoras !== ""
+          ? Number(parseFloat(orcamentoHoras).toFixed(2))
+          : null;
 
-    async getAll() {
-        try {
-            const q = query(
-                collection(db, "projects"), 
-                where("user_id", "==", auth.currentUser.uid)
-            );
-            const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Erro ao listar projetos:", error);
-            throw error;
-        }
-    },
-
-    async hardDelete(projectId) {
-        try {
-            await deleteDoc(doc(db, "projects", projectId));
-            return true;
-        } catch (error) {
-            console.error("Erro ao deletar projeto:", error);
-            throw error;
-        }
+      const docRef = await addDoc(collection(db, "projects"), {
+        user_id: auth.currentUser.uid,
+        client_id: clientId || null,
+        nome: nome.trim(),
+        orcamento_horas: horas,
+        status: "em_andamento",
+        criado_em: new Date().toISOString(),
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("Erro ao criar projeto:", error);
+      throw error;
     }
+  },
+
+  async getAll(status = null) {
+    try {
+      const conditions = [where("user_id", "==", auth.currentUser.uid)];
+      if (status) conditions.push(where("status", "==", status));
+
+      const q = query(collection(db, "projects"), ...conditions);
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.error("Erro ao listar projetos:", error);
+      throw error;
+    }
+  },
+
+  async getById(projectId) {
+    try {
+      const snap = await getDoc(doc(db, "projects", projectId));
+      if (!snap.exists()) return null;
+      return { id: snap.id, ...snap.data() };
+    } catch (error) {
+      console.error("Erro ao buscar projeto:", error);
+      throw error;
+    }
+  },
+
+  async getByClient(clientId) {
+    try {
+      const q = query(
+        collection(db, "projects"),
+        where("user_id", "==", auth.currentUser.uid),
+        where("client_id", "==", clientId),
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.error("Erro ao listar projetos do cliente:", error);
+      throw error;
+    }
+  },
+
+  async update(projectId, dados) {
+    try {
+      const ref = doc(db, "projects", projectId);
+      const payload = { atualizado_em: new Date().toISOString() };
+
+      if (dados.nome !== undefined) payload.nome = dados.nome.trim();
+      if (dados.client_id !== undefined)
+        payload.client_id = dados.client_id || null;
+      if (dados.status !== undefined) payload.status = dados.status;
+      if (dados.orcamento_horas !== undefined) {
+        payload.orcamento_horas =
+          dados.orcamento_horas !== null && dados.orcamento_horas !== ""
+            ? Number(parseFloat(dados.orcamento_horas).toFixed(2))
+            : null;
+      }
+
+      await updateDoc(ref, payload);
+    } catch (error) {
+      console.error("Erro ao atualizar projeto:", error);
+      throw error;
+    }
+  },
+
+  async updateStatus(projectId, novoStatus) {
+    try {
+      await updateDoc(doc(db, "projects", projectId), {
+        status: novoStatus,
+        atualizado_em: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      throw error;
+    }
+  },
+
+  async hardDelete(projectId) {
+    try {
+      await deleteDoc(doc(db, "projects", projectId));
+      return true;
+    } catch (error) {
+      console.error("Erro ao deletar projeto:", error);
+      throw error;
+    }
+  },
 };

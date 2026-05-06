@@ -1,29 +1,54 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* --- Variáveis (tema escuro padrão) --- */
 :root {
-    --bg-primary: #0F172A;
-    --bg-secondary: #1E293B;
-    --text-main: #ffffff;
-    --text-sub: #94A3B8;
-    --play-color: #10B981;
-    --stop-color: #EF4444;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --accent-color: #3b82f6;
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+  --play-color: #10b981;
+  --stop-color: #ef4444;
+  --input-bg: #334155;
+  --border-color: rgba(148, 163, 184, 0.2);
+  --border-radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
+/* --- Tema claro --- */
 [data-theme="light"] {
-    --bg-primary: #F1F5F9;
-    --bg-secondary: #FFFFFF;
-    --text-main: #0F172A;
-    --text-sub: #64748B;
-    --play-color: #059669;
-    --stop-color: #DC2626;
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --accent-color: #2563eb;
+  --text-main: #0f172a;
+  --text-sub: #64748b;
+  --play-color: #059669;
+  --stop-color: #dc2626;
+  --input-bg: #e2e8f0;
+  --border-color: rgba(100, 116, 139, 0.3);
+}
+
+/* --- Reset universal --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Base do documento --- */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-primary);
-    color: var(--text-main);
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  min-height: 100vh;
+  line-height: 1.5;
 }

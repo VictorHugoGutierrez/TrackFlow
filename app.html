@@ -1,25 +1,205 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>TrackFlow</title>
-    <link rel="stylesheet" href="css/base.css">
-</head>
-<body data-theme="dark"> <header>
-        <h1>TrackFlow</h1>
-        <button id="btnSair">Sair</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="TrackFlow — Gerencie o tempo, clientes e projetos de forma eficiente."
+    />
+    <title>TrackFlow — Dashboard</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>"
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="page-app" data-theme="dark">
+
+    <!-- ── HEADER PRINCIPAL ── -->
+    <header>
+      <h1 class="app-logo">TrackFlow</h1>
+
+      <nav class="nav-page" id="nav-page">
+        <button class="nav-page-btn active" onclick="switchPage('page-dashboard')">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </button>
+        <button class="nav-page-btn" onclick="switchPage('page-gestao')">
+          <i class="fa-solid fa-folder-open"></i> Gestão
+        </button>
+        <button class="nav-page-btn" onclick="switchPage('page-relatorios')">
+          <i class="fa-solid fa-chart-bar"></i> Relatórios
+        </button>
+      </nav>
+
+      <button id="btnSair">
+        <i class="fa-solid fa-right-from-bracket"></i> Sair
+      </button>
     </header>
 
+    <!-- ── CONTEÚDO PRINCIPAL ── -->
     <main>
-        <section id="status-auth">
-            <p>Usuário: <span id="userEmail">Carregando...</span></p>
-        </section>
-        
-        <div id="conteudo-principal">
-            <h2>Bem-vindo ao seu controle de tempo</h2>
+
+      <!-- PAGE: DASHBOARD -->
+      <section id="page-dashboard" class="page-content">
+        <div class="page-section-wrapper">
+          <h2><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+          <p class="page-empty-hint">Em construção...</p>
         </div>
+      </section>
+
+      <!-- PAGE: GESTÃO -->
+      <section id="page-gestao" class="page-content" style="display: none">
+        <div class="page-section-wrapper">
+
+          <!-- Título da página -->
+          <h2 class="page-title">
+            <i class="fa-solid fa-folder-open"></i> Gestão
+          </h2>
+
+          <!-- Sub-navbar das tabs (Clientes / Projetos) -->
+          <nav class="tabs-nav" id="tabs-gestao">
+            <button class="tab-link active" onclick="switchTab('tab-clientes', this)">
+              <i class="fa-solid fa-users"></i> Clientes
+            </button>
+            <button class="tab-link" onclick="switchTab('tab-projetos', this)">
+              <i class="fa-solid fa-diagram-project"></i> Projetos
+            </button>
+          </nav>
+
+          <!-- TAB: CLIENTES -->
+          <section id="tab-clientes" class="tab-content">
+            <form id="form-cliente">
+              <input
+                type="text"
+                id="cli-nome"
+                placeholder="Nome da Empresa/Cliente"
+                required
+              />
+              <input
+                type="email"
+                id="cli-contato"
+                placeholder="E-mail de Contato"
+                required
+              />
+              <button type="submit">Salvar Cliente</button>
+            </form>
+            <ul id="lista-clientes" class="data-list"></ul>
+          </section>
+
+          <!-- TAB: PROJETOS -->
+          <section id="tab-projetos" class="tab-content" style="display: none">
+            <form id="form-projeto">
+              <input
+                type="text"
+                id="proj-nome"
+                placeholder="Nome do Projeto"
+                required
+              />
+              <select id="proj-cliente">
+                <option value="">Projeto Interno (Sem Cliente)</option>
+              </select>
+              <input
+                type="number"
+                id="proj-horas"
+                placeholder="Orçamento de Horas (opcional)"
+              />
+              <button type="submit">Criar Projeto</button>
+            </form>
+            <ul id="lista-projetos" class="data-list"></ul>
+          </section>
+
+        </div>
+      </section>
+
+      <!-- PAGE: RELATÓRIOS -->
+      <section id="page-relatorios" class="page-content" style="display: none">
+        <div class="page-section-wrapper">
+          <h2><i class="fa-solid fa-chart-bar"></i> Relatórios</h2>
+          <p class="page-empty-hint">Em construção...</p>
+        </div>
+      </section>
+
     </main>
 
+    <!-- ── MODAL: EDITAR CLIENTE ── -->
+    <div id="modal-editar-cliente" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-pen"></i> Editar Cliente</h3>
+          <button class="modal-close" onclick="fecharModal('modal-editar-cliente')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form id="form-editar-cliente">
+          <input type="hidden" id="edit-cli-id" />
+          <div class="form-group">
+            <label for="edit-cli-nome">Nome</label>
+            <input type="text" id="edit-cli-nome" placeholder="Nome da Empresa/Cliente" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-cli-contato">E-mail de Contato</label>
+            <input type="email" id="edit-cli-contato" placeholder="seu@email.com" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="fecharModal('modal-editar-cliente')">Cancelar</button>
+            <button type="submit" class="btn-modal-save">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── MODAL: EDITAR PROJETO ── -->
+    <div id="modal-editar-projeto" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-pen"></i> Editar Projeto</h3>
+          <button class="modal-close" onclick="fecharModal('modal-editar-projeto')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form id="form-editar-projeto">
+          <input type="hidden" id="edit-proj-id" />
+          <div class="form-group">
+            <label for="edit-proj-nome">Nome do Projeto</label>
+            <input type="text" id="edit-proj-nome" placeholder="Nome do Projeto" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-proj-cliente">Cliente</label>
+            <select id="edit-proj-cliente">
+              <option value="">Projeto Interno (Sem Cliente)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-proj-horas">Orçamento de Horas</label>
+            <input type="number" id="edit-proj-horas" placeholder="Ex: 40" step="0.5" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="edit-proj-status">Status</label>
+            <select id="edit-proj-status">
+              <option value="em_andamento">Em andamento</option>
+              <option value="pausado">Pausado</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="fecharModal('modal-editar-projeto')">Cancelar</button>
+            <button type="submit" class="btn-modal-save">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script type="module" src="js/app.js"></script>
-</body>
+  </body>
 </html>

@@ -1,79 +1,202 @@
-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+body.page-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
 }
 
+/* Card central do login */
 .login-card {
-    background-color: var(--bg-secondary);
-    padding: 30px;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 350px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  background-color: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-md);
 }
 
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
+/* Formulário dentro do login */
+body.page-login form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  width: 100%;
 }
 
-.form-grupo {
-    border: none;
-    margin: 0;
-    padding: 0;
-}
-
+/* Título do formulário */
 #titulo-form {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 5px;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
 }
 
+/* Grupos de campos (fieldset sem borda) */
+.form-grupo {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Labels dos campos */
+.form-grupo label {
+  font-size: 0.875rem;
+  color: var(--text-sub);
+  font-weight: 500;
+}
+
+/* Divisor "ou" */
 .divisor {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    color: var(--text-sub);
-    font-size: 14px;
-    margin: 5px 0;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.875rem;
+  margin: 0.25rem 0;
+  gap: 0.625rem;
 }
 .divisor::before,
 .divisor::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid var(--text-sub);
-    opacity: 0.3;
-}
-.divisor::before {
-    margin-right: 10px;
-}
-.divisor::after {
-    margin-left: 10px;
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--text-sub);
+  opacity: 0.3;
 }
 
-label {
-    font-size: 14px;
-    color: var(--text-sub);
-    margin-bottom: 5px;
-    display: block;
+/* Rodapé do form (link "Criar Conta") */
+.form-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
 }
 
 #label-modo {
-    font-size: 13px;
-    color: var(--text-sub);
+  font-size: 0.8125rem;
+  color: var(--text-sub);
 }
 
-.form-footer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-    margin-top: 10px;
+body.page-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+body.page-app header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Logo no header */
+.app-logo {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+/* Nav principal do header — botões compactos tipo link */
+.nav-page {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Sub-nav de abas dentro da Gestão — estilo underline */
+.tabs-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+/* Área de conteúdo principal */
+body.page-app main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wrapper das páginas */
+.page-content {
+  flex: 1;
+}
+
+.page-section-wrapper {
+  max-width: 860px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+/* Título da página */
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-empty-hint {
+  color: var(--text-sub);
+  margin-top: 1.5rem;
+  font-size: 0.9375rem;
+}
+
+/* Container de cada aba (sem card próprio — fica dentro do wrapper) */
+.tab-content {
+  padding-top: 0.5rem;
+}
+
+/* Formulários dentro do app */
+body.page-app form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+/* Inputs e selects do app */
+body.page-app input,
+body.page-app select {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: var(--border-radius);
+  font-size: 0.9375rem;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+body.page-app input:focus,
+body.page-app select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+body.page-app input::placeholder {
+  color: var(--text-sub);
 }
