@@ -5,9 +5,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 import { clientService } from "./modules/services/clientService.js";
 import { projectService } from "./modules/services/projectService.js";
+import { taskService } from "./modules/services/taskService.js";
 
-// Cache de clientes para exibir nome no projeto
 let _clientesCache = [];
+let _projetosCache = [];
+let _unsubTarefas = null;
 
 // --- PROTEÇÃO E INICIALIZAÇÃO ---
 onAuthStateChanged(auth, (user) => {
@@ -17,6 +19,7 @@ onAuthStateChanged(auth, (user) => {
     renderizarListas();
     window.switchPage("page-dashboard");
   } else {
+    if (_unsubTarefas) { _unsubTarefas(); _unsubTarefas = null; }
     window.location.href = "index.html";
   }
 });
@@ -51,6 +54,7 @@ window.switchTab = (tabId, btnEl) => {
   if (btnEl) btnEl.classList.add("active");
 
   if (tabId === "tab-projetos") carregarSelectClientes();
+  if (tabId === "tab-tarefas") carregarSelectProjetos();
   renderizarListas();
 };
 
@@ -179,6 +183,81 @@ async function carregarSelectClientes(selectId = "proj-cliente") {
   }
 }
 
+async function carregarSelectProjetos(selectId = "tar-projeto") {
+  if (!auth.currentUser) return;
+  const projetos = await projectService.getAll();
+  _projetosCache = projetos;
+  const select = document.getElementById(selectId);
+  if (select) {
+    const options = projetos.map(
+      (p) => `<option value="${p.id}">${p.nome}</option>`,
+    );
+    select.innerHTML =
+      '<option value="">Selecione um Projeto</option>' + options.join("");
+  }
+}
+
+function nomeProjeto(projectId) {
+  if (!projectId) return "Sem Projeto";
+  const proj = _projetosCache.find((p) => p.id === projectId);
+  return proj ? proj.nome : "Projeto removido";
+}
+
+const TASK_STATUS_LABEL = {
+  todo: "A fazer",
+  doing: "Em progresso",
+  done: "Concluída",
+};
+
+const TASK_STATUS_CLASS = {
+  todo: "badge-pausado",
+  doing: "badge-em-andamento",
+  done: "badge-concluido",
+};
+
+async function iniciarListenerTarefas() {
+  if (_unsubTarefas) _unsubTarefas();
+  if (_projetosCache.length === 0) {
+    const projetos = await projectService.getAll();
+    _projetosCache = projetos;
+  }
+  await carregarSelectProjetos("tar-projeto");
+  _unsubTarefas = taskService.listenAll((tarefas) => {
+    const lista = document.getElementById("lista-tarefas");
+    if (!lista) return;
+    if (tarefas.length === 0) {
+      lista.innerHTML = `<li class="list-empty">Nenhuma tarefa cadastrada ainda.</li>`;
+      return;
+    }
+    lista.innerHTML = tarefas
+      .map(
+        (t) => `
+        <li>
+          <div class="item-info">
+            <strong>${t.titulo}</strong>
+            <span class="item-sub">
+              <i class="fa-solid fa-diagram-project fa-xs"></i> ${nomeProjeto(t.project_id)}
+            </span>
+          </div>
+          <div class="item-actions">
+            <span class="badge ${TASK_STATUS_CLASS[t.status] ?? "badge-pausado"}">
+              ${TASK_STATUS_LABEL[t.status] ?? t.status}
+            </span>
+            <button class="btn-icon btn-edit" title="Editar"
+              onclick="abrirEdicaoTarefa('${t.id}')">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn-icon btn-delete" title="Excluir"
+              onclick="deletarTarefa('${t.id}')">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </li>`,
+      )
+      .join("");
+  });
+}
+
 // ─── AÇÕES DE CLIENTE ─────────────────────────────────────────────────────────
 
 window.desativarCliente = async (id) => {
@@ -203,8 +282,6 @@ window.abrirEdicaoCliente = async (id) => {
   abrirModal("modal-editar-cliente");
 };
 
-// ─── AÇÕES DE PROJETO ─────────────────────────────────────────────────────────
-
 window.deletarProjeto = async (id) => {
   if (confirm("Excluir projeto permanentemente?")) {
     await projectService.hardDelete(id);
@@ -215,16 +292,29 @@ window.deletarProjeto = async (id) => {
 window.abrirEdicaoProjeto = async (id) => {
   const proj = await projectService.getById(id);
   if (!proj) return;
-
-  // Preenche o select de clientes antes de abrir
   await carregarSelectClientes("edit-proj-cliente");
-
   document.getElementById("edit-proj-id").value = id;
   document.getElementById("edit-proj-nome").value = proj.nome;
   document.getElementById("edit-proj-cliente").value = proj.client_id ?? "";
   document.getElementById("edit-proj-horas").value = proj.orcamento_horas ?? "";
   document.getElementById("edit-proj-status").value = proj.status ?? "em_andamento";
   abrirModal("modal-editar-projeto");
+};
+
+window.deletarTarefa = async (id) => {
+  if (confirm("Excluir tarefa permanentemente?")) {
+    await taskService.hardDelete(id);
+  }
+};
+
+window.abrirEdicaoTarefa = async (id) => {
+  const tar = await taskService.getById(id);
+  if (!tar) return;
+  await carregarSelectProjetos("edit-tar-projeto");
+  document.getElementById("edit-tar-id").value = id;
+  document.getElementById("edit-tar-titulo").value = tar.titulo;
+  document.getElementById("edit-tar-projeto").value = tar.project_id ?? "";
+  abrirModal("modal-editar-tarefa");
 };
 
 // ─── MODAL HELPERS ────────────────────────────────────────────────────────────
@@ -247,7 +337,10 @@ document.addEventListener("click", (e) => {
 // ─── EVENTOS ──────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Botão Sair
+  onAuthStateChanged(auth, (user) => {
+    if (user) iniciarListenerTarefas();
+  });
+
   document.getElementById("btnSair")?.addEventListener("click", async () => {
     await signOut(auth);
     window.location.href = "index.html";
@@ -297,7 +390,6 @@ document.addEventListener("DOMContentLoaded", () => {
       renderizarListas();
     });
 
-  // Form: editar projeto
   document
     .getElementById("form-editar-projeto")
     ?.addEventListener("submit", async (e) => {
@@ -312,5 +404,27 @@ document.addEventListener("DOMContentLoaded", () => {
       await projectService.update(id, { nome, client_id, orcamento_horas, status });
       window.fecharModal("modal-editar-projeto");
       renderizarListas();
+    });
+
+  document
+    .getElementById("form-tarefa")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const projectId = document.getElementById("tar-projeto").value || null;
+      const titulo = document.getElementById("tar-titulo").value.trim();
+      await taskService.create(projectId, titulo);
+      e.target.reset();
+    });
+
+  document
+    .getElementById("form-editar-tarefa")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("edit-tar-id").value;
+      const titulo = document.getElementById("edit-tar-titulo").value.trim();
+      const project_id =
+        document.getElementById("edit-tar-projeto").value || null;
+      await taskService.update(id, { titulo, project_id });
+      window.fecharModal("modal-editar-tarefa");
     });
 });

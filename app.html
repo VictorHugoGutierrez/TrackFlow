@@ -75,6 +75,9 @@
             <button class="tab-link" onclick="switchTab('tab-projetos', this)">
               <i class="fa-solid fa-diagram-project"></i> Projetos
             </button>
+            <button class="tab-link" onclick="switchTab('tab-tarefas', this)">
+              <i class="fa-solid fa-list-check"></i> Tarefas
+            </button>
           </nav>
 
           <!-- TAB: CLIENTES -->
@@ -117,6 +120,23 @@
               <button type="submit">Criar Projeto</button>
             </form>
             <ul id="lista-projetos" class="data-list"></ul>
+          </section>
+
+          <!-- TAB: TAREFAS -->
+          <section id="tab-tarefas" class="tab-content" style="display: none">
+            <form id="form-tarefa">
+              <select id="tar-projeto">
+                <option value="">Selecione um Projeto</option>
+              </select>
+              <input
+                type="text"
+                id="tar-titulo"
+                placeholder="Título da Tarefa"
+                required
+              />
+              <button type="submit">Salvar Tarefa</button>
+            </form>
+            <ul id="lista-tarefas" class="data-list"></ul>
           </section>
 
         </div>
@@ -194,6 +214,35 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn-modal-cancel" onclick="fecharModal('modal-editar-projeto')">Cancelar</button>
+            <button type="submit" class="btn-modal-save">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── MODAL: EDITAR TAREFA ── -->
+    <div id="modal-editar-tarefa" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-pen"></i> Editar Tarefa</h3>
+          <button class="modal-close" onclick="fecharModal('modal-editar-tarefa')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <form id="form-editar-tarefa">
+          <input type="hidden" id="edit-tar-id" />
+          <div class="form-group">
+            <label for="edit-tar-titulo">Título da Tarefa</label>
+            <input type="text" id="edit-tar-titulo" placeholder="Título da Tarefa" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-tar-projeto">Projeto</label>
+            <select id="edit-tar-projeto">
+              <option value="">Selecione um Projeto</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="fecharModal('modal-editar-tarefa')">Cancelar</button>
             <button type="submit" class="btn-modal-save">Salvar</button>
           </div>
         </form>

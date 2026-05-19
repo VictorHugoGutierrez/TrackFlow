@@ -447,7 +447,7 @@ body.page-app button[type="submit"]:hover {
   color: var(--text-main);
 }
 .btn-modal-save {
-  background: var(--accent-color);
+  background: var(--play-color);
   border: none;
   color: #fff;
   padding: 0.6rem 1.5rem;
@@ -455,8 +455,15 @@ body.page-app button[type="submit"]:hover {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: filter 0.2s;
+  transition:
+    filter 0.2s,
+    box-shadow 0.2s;
 }
 .btn-modal-save:hover {
   filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+#lista-tarefas li {
+  border-left-color: #a78bfa;
 }
