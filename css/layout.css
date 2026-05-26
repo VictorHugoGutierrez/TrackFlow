@@ -200,3 +200,202 @@ body.page-app select:focus {
 body.page-app input::placeholder {
   color: var(--text-sub);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   RELATÓRIOS — Layout
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Wrapper principal da página ── */
+.rel-page {
+  padding: 2rem 2rem 3rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  animation: rel-fadeIn 0.35s ease;
+}
+
+@keyframes rel-fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Cabeçalho da página ── */
+.rel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.rel-header-left h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.rel-header-left h2 i { color: var(--accent-color); }
+
+.rel-header-left p {
+  font-size: 0.875rem;
+  color: var(--text-sub);
+}
+
+.rel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Barra de filtros ── */
+.rel-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.rel-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 160px;
+}
+
+.rel-filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Sobrescreve o estilo global de input/select do app apenas dentro dos filtros */
+.rel-filter-group select,
+.rel-filter-group input[type="date"] {
+  padding: 0.55rem 0.875rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  width: 100%;
+}
+
+.rel-filter-group select:focus,
+.rel-filter-group input[type="date"]:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.rel-filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+}
+
+/* ── Grid de KPI cards ── */
+.rel-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Grid de gráficos (2/3 + 1/3) ── */
+.rel-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Wrapper do gráfico de linha ── */
+.rel-line-chart-wrap {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.rel-line-chart-wrap svg { width: 100%; height: 100%; }
+
+.rel-line-x-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0 0;
+}
+
+.rel-line-x-labels span {
+  font-size: 0.6875rem;
+  color: var(--text-sub);
+  flex: 1;
+  text-align: center;
+}
+
+/* ── Responsividade ── */
+@media (max-width: 1024px) {
+  .rel-charts-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .rel-page { padding: 1.25rem 1rem 2rem; }
+
+  .rel-header { flex-direction: column; }
+
+  .rel-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .rel-filters { flex-direction: column; }
+
+  .rel-filter-group {
+    min-width: auto;
+    flex: none;
+    width: 100%;
+  }
+
+  .rel-filter-apply,
+  .rel-filter-reset {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rel-table-search input { width: 120px; }
+}
+
+@media (max-width: 480px) {
+  .rel-kpi-grid { grid-template-columns: 1fr; }
+
+  .rel-kpi-value { font-size: 1.5rem; }
+
+  .rel-table-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rel-table-search input { width: 100%; }
+
+  .rel-table-search { width: 100%; }
+
+  .rel-table-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rel-bar-chart { height: 160px; }
+
+  .rel-bar-wrap { height: 120px; }
+}

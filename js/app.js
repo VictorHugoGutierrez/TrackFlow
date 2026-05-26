@@ -6,6 +6,7 @@ import {
 import { clientService } from "./modules/services/clientService.js";
 import { projectService } from "./modules/services/projectService.js";
 import { taskService } from "./modules/services/taskService.js";
+import { initRelatorios } from "./modules/reports.js";
 
 let _clientesCache = [];
 let _projetosCache = [];
@@ -345,6 +346,34 @@ document.addEventListener("DOMContentLoaded", () => {
     await signOut(auth);
     window.location.href = "index.html";
   });
+
+  // ── Tema dark / light ──────────────────────────────────────────────────────
+  const btnTema = document.getElementById("btn-tema");
+  const body    = document.body;
+
+  function atualizarIconeTema() {
+    const isDark = body.dataset.theme === "dark";
+    if (!btnTema) return;
+    btnTema.innerHTML = isDark
+      ? '<i class="fa-solid fa-sun"></i>'
+      : '<i class="fa-solid fa-moon"></i>';
+    btnTema.title = isDark ? "Ativar modo claro" : "Ativar modo escuro";
+  }
+
+  btnTema?.addEventListener("click", () => {
+    const isDark = body.dataset.theme === "dark";
+    body.dataset.theme = isDark ? "light" : "dark";
+    localStorage.setItem("tf-tema", body.dataset.theme);
+    atualizarIconeTema();
+  });
+
+  // Persiste tema salvo no localStorage
+  const temaSalvo = localStorage.getItem("tf-tema");
+  if (temaSalvo) body.dataset.theme = temaSalvo;
+  atualizarIconeTema();
+
+  // ── Relatórios ────────────────────────────────────────────────────────────
+  initRelatorios();
 
   // Form: criar cliente
   document
