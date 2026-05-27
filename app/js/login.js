@@ -9,16 +9,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const btnEntrar = document.getElementById("btnEntrar");
-  if (btnEntrar) {
-    btnEntrar.addEventListener("click", () => {
-      const nome = document.getElementById("input-nome").value ?? "";
-      const email = document.getElementById("input-email").value ?? "";
-      const senha = document.getElementById("input-senha").value ?? "";
-      if (btnEntrar.textContent === "Entrar") {
-        loginUsuario(email, senha);
-      } else {
-        cadastrarUsuario(email, senha, nome);
+  const form = document.getElementById("form-autenticacao");
+
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const btnEntrar = document.getElementById("btnEntrar");
+      if (btnEntrar) {
+        const nome = document.getElementById("input-nome").value ?? "";
+        const email = document.getElementById("input-email").value ?? "";
+        const senha = document.getElementById("input-senha").value ?? "";
+        if (btnEntrar.innerText === "Entrar") {
+          loginUsuario(email, senha);
+        } else {
+          cadastrarUsuario(email, senha, nome);
+        }
       }
     });
   }

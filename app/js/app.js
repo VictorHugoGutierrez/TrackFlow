@@ -20,8 +20,11 @@ onAuthStateChanged(auth, (user) => {
     renderizarListas();
     window.switchPage("page-dashboard");
   } else {
-    if (_unsubTarefas) { _unsubTarefas(); _unsubTarefas = null; }
-    window.location.href = "index.html";
+    if (_unsubTarefas) {
+      _unsubTarefas();
+      _unsubTarefas = null;
+    }
+    window.location.href = "../index.html";
   }
 });
 
@@ -298,7 +301,8 @@ window.abrirEdicaoProjeto = async (id) => {
   document.getElementById("edit-proj-nome").value = proj.nome;
   document.getElementById("edit-proj-cliente").value = proj.client_id ?? "";
   document.getElementById("edit-proj-horas").value = proj.orcamento_horas ?? "";
-  document.getElementById("edit-proj-status").value = proj.status ?? "em_andamento";
+  document.getElementById("edit-proj-status").value =
+    proj.status ?? "em_andamento";
   abrirModal("modal-editar-projeto");
 };
 
@@ -344,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnSair")?.addEventListener("click", async () => {
     await signOut(auth);
-    window.location.href = "index.html";
+    window.location.href = "./login.html";
   });
 
   // ── Tema dark / light ──────────────────────────────────────────────────────
@@ -430,7 +434,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const orcamento_horas =
         document.getElementById("edit-proj-horas").value || null;
       const status = document.getElementById("edit-proj-status").value;
-      await projectService.update(id, { nome, client_id, orcamento_horas, status });
+      await projectService.update(id, {
+        nome,
+        client_id,
+        orcamento_horas,
+        status,
+      });
       window.fecharModal("modal-editar-projeto");
       renderizarListas();
     });
