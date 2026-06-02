@@ -392,6 +392,33 @@ body.page-app button[type="submit"]:hover {
   color: var(--text-main);
 }
 
+.modal-copy {
+  color: var(--text-main);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.modal-copy-muted {
+  color: var(--text-sub);
+  font-size: 0.875rem;
+}
+
+.modal-feedback {
+  min-height: 1.25rem;
+  color: var(--text-sub);
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.modal-feedback.success {
+  color: var(--play-color);
+}
+
+.modal-feedback.error {
+  color: var(--stop-color);
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -1022,6 +1049,7 @@ body.page-app button[type="submit"]:hover {
 .badge-pendente  { background: rgba(234,179,8,0.15);   color: #facc15; }
 .badge-atrasado  { background: rgba(239,68,68,0.15);   color: #f87171; }
 .badge-cancelado { background: rgba(148,163,184,0.12); color: #94a3b8; }
+.badge-rascunho  { background: rgba(148,163,184,0.12); color: #94a3b8; }
 
 
 .rel-table-empty {
@@ -1485,4 +1513,4 @@ button i,
   display: inline-block;
   vertical-align: middle;
   flex-shrink: 0;
-}
+}

@@ -120,11 +120,18 @@
             <i class="fa-solid fa-list-check"></i> Tarefas
           </button>
           <button
+            id="menu-relatorios"
+            class="sidebar-link"
+            onclick="switchPage('page-relatorios')"
+          >
+            <i class="fa-solid fa-chart-bar"></i> Relatórios
+          </button>
+          <button
             id="menu-faturas"
             class="sidebar-link"
             onclick="switchPage('page-faturas')"
           >
-            <i class="fa-solid fa-file-invoice-dollar"></i> Relatórios e Faturas
+            <i class="fa-solid fa-file-invoice-dollar"></i> Faturas
           </button>
           <button
             class="sidebar-link"
@@ -349,8 +356,7 @@
                   Relatórios
                 </h2>
                 <p>
-                  Visão consolidada de receitas, projetos e desempenho da
-                  equipe.
+                  Visão consolidada de faturas, recebimentos e pendências.
                 </p>
               </div>
               <div class="rel-header-actions">
@@ -417,16 +423,14 @@
               </div>
 
               <div class="rel-filter-group">
-                <label for="rel-filtro-categoria">Categoria</label>
+                <label for="rel-filtro-categoria">Tipo</label>
                 <select
                   id="rel-filtro-categoria"
-                  aria-label="Filtrar por categoria"
+                  aria-label="Filtrar por tipo"
                 >
-                  <option value="todos">Todas as categorias</option>
-                  <option value="Design">Design</option>
-                  <option value="Desenvolvimento">Desenvolvimento</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Consultoria">Consultoria</option>
+                  <option value="todos">Todas as faturas</option>
+                  <option value="com_cliente">Com cliente</option>
+                  <option value="interno">Projeto interno</option>
                 </select>
               </div>
 
@@ -434,6 +438,7 @@
                 <label for="rel-filtro-status">Status</label>
                 <select id="rel-filtro-status" aria-label="Filtrar por status">
                   <option value="todos">Todos os status</option>
+                  <option value="rascunho">Rascunho</option>
                   <option value="pago">Pago</option>
                   <option value="pendente">Pendente</option>
                   <option value="atrasado">Atrasado</option>
@@ -476,7 +481,7 @@
                 <div class="rel-chart-header">
                   <h3 class="rel-chart-title">
                     <i class="fa-solid fa-chart-column"></i>
-                    Receita vs. Despesa por Mês
+                    Emitido vs. Recebido por Mês
                   </h3>
                   <div class="rel-chart-legend" aria-hidden="true">
                     <div class="rel-legend-item">
@@ -484,14 +489,14 @@
                         class="rel-legend-dot"
                         class="bg-play"
                       ></span>
-                      Receita
+                      Emitido
                     </div>
                     <div class="rel-legend-item">
                       <span
                         class="rel-legend-dot"
                         class="bg-stop"
                       ></span>
-                      Despesa
+                      Recebido
                     </div>
                   </div>
                 </div>
@@ -503,7 +508,7 @@
                 <div class="rel-chart-header">
                   <h3 class="rel-chart-title">
                     <i class="fa-solid fa-chart-pie"></i>
-                    Receita por Categoria
+                    Faturamento por Status
                   </h3>
                 </div>
                 <div id="rel-grafico-pizza"></div>
@@ -515,7 +520,7 @@
               <div class="rel-chart-header">
                 <h3 class="rel-chart-title">
                   <i class="fa-solid fa-chart-line"></i>
-                  Evolução da Receita (YTD)
+                  Evolução do Faturamento (YTD)
                 </h3>
                 <div class="rel-chart-legend" aria-hidden="true">
                   <div class="rel-legend-item">
@@ -523,7 +528,7 @@
                       class="rel-legend-dot"
                       class="bg-blue"
                     ></span>
-                    Receita mensal
+                    Total emitido
                   </div>
                 </div>
               </div>
@@ -535,7 +540,7 @@
               <div class="rel-table-top">
                 <h3>
                   <i class="fa-solid fa-table-list"></i>
-                  Registros Recentes
+                  Faturas Recentes
                 </h3>
                 <div class="rel-table-search" role="search">
                   <i
@@ -545,7 +550,7 @@
                   <input
                     type="search"
                     id="rel-busca"
-                    placeholder="Buscar colaborador, projeto..."
+                    placeholder="Buscar fatura, cliente, projeto..."
                     aria-label="Buscar na tabela"
                     autocomplete="off"
                   />
@@ -556,32 +561,36 @@
                 <table class="rel-table" aria-label="Tabela de registros">
                   <thead id="rel-table-head">
                     <tr>
-                      <th data-col="data" scope="col" title="Ordenar por data">
-                        Data
-                      </th>
                       <th
-                        data-col="usuario"
+                        data-col="emitida_em"
                         scope="col"
-                        title="Ordenar por colaborador"
+                        title="Ordenar por emissão"
                       >
-                        Colaborador
+                        Emissão
                       </th>
                       <th
-                        data-col="categoria"
+                        data-col="numero"
                         scope="col"
-                        title="Ordenar por categoria"
+                        title="Ordenar por número"
                       >
-                        Categoria
+                        Fatura
                       </th>
                       <th
-                        data-col="descricao"
+                        data-col="cliente"
                         scope="col"
-                        title="Ordenar por descrição"
+                        title="Ordenar por cliente"
                       >
-                        Descrição
+                        Cliente
                       </th>
                       <th
-                        data-col="valor"
+                        data-col="projeto"
+                        scope="col"
+                        title="Ordenar por projeto"
+                      >
+                        Projeto
+                      </th>
+                      <th
+                        data-col="valor_total"
                         scope="col"
                         title="Ordenar por valor"
                       >
@@ -1258,6 +1267,49 @@
             id="confirm-modal-btn-ok"
           >
             Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="modal-enviar-email-fatura" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-envelope"></i> Enviar fatura</h3>
+          <button
+            class="modal-close"
+            onclick="fecharModal('modal-enviar-email-fatura')"
+            type="button"
+            aria-label="Fechar"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <input type="hidden" id="email-invoice-id" />
+        <p id="email-invoice-question" class="modal-copy">
+          Deseja enviar o e-mail salvo para esta fatura?
+        </p>
+        <p id="email-invoice-target" class="modal-copy modal-copy-muted"></p>
+        <p
+          id="email-invoice-feedback"
+          class="modal-feedback"
+          aria-live="polite"
+        ></p>
+        <div class="modal-footer">
+          <button
+            type="button"
+            id="btn-email-nao"
+            class="btn-modal-cancel"
+          >
+            Não
+          </button>
+          <button
+            type="button"
+            id="btn-email-sim"
+            class="btn-modal-save"
+          >
+            Sim
           </button>
         </div>
       </div>

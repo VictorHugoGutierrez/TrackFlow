@@ -8,10 +8,11 @@ import { projectService } from "./modules/services/projectService.js";
 import { taskService } from "./modules/services/taskService.js";
 import { timeEntryService } from "./modules/services/timeEntryService.js";
 import { invoiceService } from "./modules/services/invoiceService.js";
+import { invoiceEmailService } from "./modules/services/invoiceEmailService.js";
 import { settingsService } from "./modules/services/settingsService.js";
 import { initTimer, carregarDropdownsTimer } from "./modules/timer.js";
 import { initPomodoro, updatePomodoroSettings } from "./modules/pomodoro.js";
-import { initRelatorios } from "./modules/reports.js";
+import { initRelatorios, refreshRelatorios } from "./modules/reports.js";
 import { showToast, showConfirm } from "./modules/ui.js";
 
 let _clientesCache = [];
@@ -20,6 +21,7 @@ let _unsubTarefas = null;
 let _unsubTimeEntries = null;
 let _unsubInvoices = null;
 let _settingsCache = { taxa_horaria_padrao: 0 };
+let _faturaEmailPendente = null;
 
 
 onAuthStateChanged(auth, (user) => {
@@ -65,6 +67,10 @@ window.switchPage = (pageId, tabId = null) => {
   if (pageId === "page-gestao" && tabId) {
     const tabBtn = document.querySelector(`.tab-link[onclick*='${tabId}']`);
     window.switchTab(tabId, tabBtn);
+  }
+
+  if (pageId === "page-relatorios") {
+    refreshRelatorios();
   }
 
   
@@ -791,14 +797,26 @@ async function salvarFaturaGerada() {
   if (btnSave) btnSave.disabled = true;
 
   try {
-    await invoiceService.create(
-      _generatedReport.client_id,
-      _generatedReport.mes_referencia,
-      _generatedReport.total_horas,
-      _generatedReport.valor_total
-    );
+    const cliente =
+      _generatedReport.client_id && _generatedReport.client_id !== "todos"
+        ? _clientesCache.find((c) => c.id === _generatedReport.client_id)
+        : null;
+    const fatura = await invoiceService.create({
+      client_id: _generatedReport.client_id,
+      client_nome: cliente?.nome ?? "Todos os Clientes",
+      email_to: cliente?.contato ?? null,
+      mes_referencia: _generatedReport.mes_referencia,
+      total_horas: _generatedReport.total_horas,
+      valor_total: _generatedReport.valor_total,
+      status: "pendente",
+      moeda: _settingsCache.moeda || "BRL",
+      numero: `INV-${_generatedReport.mes_referencia}`,
+      descricao: "Fatura gerada a partir dos registros de tempo.",
+      emitida_em: `${_generatedReport.mes_referencia}-01`,
+    });
 
     showToast("Fatura salva com sucesso!", "success");
+    abrirModalEnvioFatura(fatura);
 
     
     _generatedReport = null;
@@ -813,6 +831,29 @@ async function salvarFaturaGerada() {
     showToast("Erro ao salvar fatura: " + error.message, "error");
     if (btnSave) btnSave.disabled = false;
   }
+}
+
+function abrirModalEnvioFatura(fatura) {
+  _faturaEmailPendente = fatura;
+
+  const idInput = document.getElementById("email-invoice-id");
+  const target = document.getElementById("email-invoice-target");
+  const feedback = document.getElementById("email-invoice-feedback");
+  const btnSim = document.getElementById("btn-email-sim");
+
+  if (idInput) idInput.value = fatura.id;
+  if (target) {
+    target.textContent = fatura.email_to
+      ? `E-mail associado: ${fatura.email_to}`
+      : "Esta fatura não possui e-mail associado.";
+  }
+  if (feedback) {
+    feedback.textContent = "";
+    feedback.className = "modal-feedback";
+  }
+  if (btnSim) btnSim.disabled = !fatura.email_to;
+
+  abrirModal("modal-enviar-email-fatura");
 }
 
 
@@ -1077,4 +1118,43 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("btn-billing-save")
     ?.addEventListener("click", salvarFaturaGerada);
+
+  document.getElementById("btn-email-nao")?.addEventListener("click", () => {
+    window.fecharModal("modal-enviar-email-fatura");
+  });
+
+  document.getElementById("btn-email-sim")?.addEventListener("click", async () => {
+    if (!_faturaEmailPendente) return;
+
+    const feedback = document.getElementById("email-invoice-feedback");
+    const btnSim = document.getElementById("btn-email-sim");
+    const btnNao = document.getElementById("btn-email-nao");
+
+    if (feedback) {
+      feedback.textContent = "Registrando solicitação de envio...";
+      feedback.className = "modal-feedback";
+    }
+    if (btnSim) btnSim.disabled = true;
+    if (btnNao) btnNao.disabled = true;
+
+    try {
+      await invoiceEmailService.requestSend(_faturaEmailPendente);
+      if (feedback) {
+        feedback.textContent = "Solicitação de envio registrada com sucesso.";
+        feedback.className = "modal-feedback success";
+      }
+      showToast("Solicitação de envio registrada.", "success");
+      setTimeout(() => window.fecharModal("modal-enviar-email-fatura"), 900);
+    } catch (error) {
+      if (feedback) {
+        feedback.textContent =
+          error.message || "Não foi possível solicitar o envio.";
+        feedback.className = "modal-feedback error";
+      }
+      showToast("Erro ao solicitar envio: " + error.message, "error");
+    } finally {
+      if (btnSim) btnSim.disabled = false;
+      if (btnNao) btnNao.disabled = false;
+    }
+  });
 });
