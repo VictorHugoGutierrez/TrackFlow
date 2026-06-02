@@ -1,22 +1,18 @@
-// ── reports.js ────────────────────────────────────────────────
-// Módulo de Relatórios — TrackFlow
-// Exporta initRelatorios(), chamado pelo app.js no DOMContentLoaded.
-// ──────────────────────────────────────────────────────────────
 
-/**
- * Inicializa todos os comportamentos da página de Relatórios:
- * filtros, KPI cards, gráficos e tabela dinâmica.
- * Chamado uma única vez, após o login ser confirmado.
- */
+
+
+
+
+
 export function initRelatorios() {
-  // Só executa se a seção de relatórios existir no DOM
+  
   if (!document.getElementById("page-relatorios")) return;
 
   _initFiltros();
   _initBotoesExport();
 }
 
-// ── Filtros ───────────────────────────────────────────────────
+
 
 function _initFiltros() {
   const selectPeriodo = document.getElementById("rel-filtro-periodo");
@@ -24,7 +20,7 @@ function _initFiltros() {
   const btnAplicar = document.getElementById("rel-filtro-aplicar");
   const btnReset = document.getElementById("rel-filtro-reset");
 
-  // Mostrar/ocultar campos de data customizada
+  
   selectPeriodo?.addEventListener("change", () => {
     if (customDatas) {
       customDatas.style.display =
@@ -32,12 +28,12 @@ function _initFiltros() {
     }
   });
 
-  // Aplicar filtros (placeholder — conecte à sua fonte de dados)
+  
   btnAplicar?.addEventListener("click", () => {
-    console.log("Filtros aplicados:", _coletarFiltros());
+
   });
 
-  // Limpar filtros
+  
   btnReset?.addEventListener("click", () => {
     if (selectPeriodo) selectPeriodo.value = "todos";
     if (customDatas) customDatas.style.display = "none";
@@ -64,7 +60,7 @@ function _coletarFiltros() {
   };
 }
 
-// ── Botões de exportação ──────────────────────────────────────
+
 
 function _initBotoesExport() {
   document.getElementById("rel-imprimir")?.addEventListener("click", () => {
@@ -72,6 +68,6 @@ function _initBotoesExport() {
   });
 
   document.getElementById("rel-exportar-csv")?.addEventListener("click", () => {
-    console.log("Exportar CSV — a implementar");
+
   });
 }

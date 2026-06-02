@@ -43,7 +43,7 @@ export const clientService = {
     }
   },
 
-  // Retorna todos os clientes (ativos e inativos)
+  
   async getAll() {
     try {
       const q = query(
@@ -92,13 +92,20 @@ export const clientService = {
         ativo: false,
         atualizado_em: new Date().toISOString(),
       });
+
+      
+      const qProj = query(collection(db, "projects"), where("client_id", "==", clientId));
+      const snapProj = await getDocs(qProj);
+      const batchPromises = snapProj.docs.map((d) => updateDoc(d.ref, { client_id: null, atualizado_em: new Date().toISOString() }));
+      await Promise.all(batchPromises);
+
     } catch (error) {
       console.error("Erro ao desativar cliente:", error);
       throw error;
     }
   },
 
-  // Reativa um cliente desativado
+  
   async reactivate(clientId) {
     try {
       const ref = doc(db, "clients", clientId);

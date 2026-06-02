@@ -19,7 +19,7 @@ function applyTheme(theme) {
   }
 }
 
-// Load saved preference
+
 const savedTheme = localStorage.getItem("trackflow-theme");
 const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 const initialTheme = savedTheme || (systemDark ? "dark" : "dark");
@@ -53,7 +53,7 @@ hamburger.addEventListener("click", () => {
   mobileMenu.setAttribute("aria-hidden", String(!isOpen));
 });
 
-// Close mobile menu on link click
+
 mobileMenu.querySelectorAll("a").forEach((link) => {
   link.addEventListener("click", () => {
     hamburger.classList.remove("active");
@@ -63,7 +63,7 @@ mobileMenu.querySelectorAll("a").forEach((link) => {
   });
 });
 
-// Close on outside click
+
 document.addEventListener("click", (e) => {
   if (!header.contains(e.target) && !mobileMenu.contains(e.target)) {
     hamburger.classList.remove("active");

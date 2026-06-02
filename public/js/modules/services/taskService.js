@@ -45,7 +45,16 @@ export const taskService = {
     const payload = { atualizado_em: new Date().toISOString() };
     if (dados.titulo !== undefined) payload.titulo = dados.titulo.trim();
     if (dados.project_id !== undefined) payload.project_id = dados.project_id || null;
+    if (dados.status !== undefined) payload.status = dados.status;
     await updateDoc(ref, payload);
+  },
+
+  async updateStatus(taskId, status) {
+    const ref = doc(db, "tasks", taskId);
+    await updateDoc(ref, {
+      status: status,
+      atualizado_em: new Date().toISOString()
+    });
   },
 
   async hardDelete(taskId) {

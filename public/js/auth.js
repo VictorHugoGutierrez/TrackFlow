@@ -24,7 +24,7 @@ export async function cadastrarUsuario(email, senha, nome) {
             pomodoro: { trabalho: 25, pausa: 5 }
         });
 
-        console.log("Usuário e configurações criados com sucesso!");
+
         window.location.href = "app.html";
     } catch (error) {
         console.error("Erro no cadastro:", error.message);

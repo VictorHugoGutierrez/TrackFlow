@@ -19,6 +19,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/png" href="images/Trackflow.png" />
   </head>
 
   <body class="page-login" data-theme="dark">
@@ -26,7 +27,7 @@
       <h1 id="titulo-form">Entrar</h1>
 
       <form id="form-autenticacao" novalidate>
-        <fieldset id="nome" class="form-grupo" style="display: none">
+        <fieldset id="nome" class="form-grupo d-none">
           <label for="input-nome">Nome</label>
           <input
             type="text"
@@ -61,7 +62,7 @@
           />
         </fieldset>
 
-        <p style="text-align: right; margin-top: -8px; margin-bottom: 15px">
+        <p class="login-forgot-password">
           <a href="#" id="btn-esqueci" class="link-texto"
             >Esqueci minha senha</a
           >

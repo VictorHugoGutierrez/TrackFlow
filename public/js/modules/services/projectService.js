@@ -12,11 +12,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
 export const projectService = {
-  async create(nome, clientId = null, orcamentoHoras = null) {
+  async create(nome, clientId = null, orcamentoHoras = null, taxaHoraria = null) {
     try {
       const horas =
         orcamentoHoras !== null && orcamentoHoras !== ""
           ? Number(parseFloat(orcamentoHoras).toFixed(2))
+          : null;
+
+      const taxa =
+        taxaHoraria !== null && taxaHoraria !== ""
+          ? Number(parseFloat(taxaHoraria).toFixed(2))
           : null;
 
       const docRef = await addDoc(collection(db, "projects"), {
@@ -24,6 +29,7 @@ export const projectService = {
         client_id: clientId || null,
         nome: nome.trim(),
         orcamento_horas: horas,
+        taxa_horaria: taxa,
         status: "em_andamento",
         criado_em: new Date().toISOString(),
       });
@@ -83,6 +89,12 @@ export const projectService = {
       if (dados.client_id !== undefined)
         payload.client_id = dados.client_id || null;
       if (dados.status !== undefined) payload.status = dados.status;
+      if (dados.taxa_horaria !== undefined) {
+        payload.taxa_horaria =
+          dados.taxa_horaria !== null && dados.taxa_horaria !== ""
+            ? Number(parseFloat(dados.taxa_horaria).toFixed(2))
+            : null;
+      }
       if (dados.orcamento_horas !== undefined) {
         payload.orcamento_horas =
           dados.orcamento_horas !== null && dados.orcamento_horas !== ""
@@ -112,6 +124,19 @@ export const projectService = {
   async hardDelete(projectId) {
     try {
       await deleteDoc(doc(db, "projects", projectId));
+
+      
+      const qTasks = query(collection(db, "tasks"), where("project_id", "==", projectId));
+      const snapTasks = await getDocs(qTasks);
+      const taskPromises = snapTasks.docs.map((d) => updateDoc(d.ref, { project_id: null, atualizado_em: new Date().toISOString() }));
+      
+      
+      const qEntries = query(collection(db, "time_entries"), where("project_id", "==", projectId));
+      const snapEntries = await getDocs(qEntries);
+      const entryPromises = snapEntries.docs.map((d) => updateDoc(d.ref, { project_id: null, atualizado_em: new Date().toISOString() }));
+
+      await Promise.all([...taskPromises, ...entryPromises]);
+
       return true;
     } catch (error) {
       console.error("Erro ao deletar projeto:", error);

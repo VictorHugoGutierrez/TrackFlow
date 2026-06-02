@@ -6,45 +6,79 @@ import {
 import { clientService } from "./modules/services/clientService.js";
 import { projectService } from "./modules/services/projectService.js";
 import { taskService } from "./modules/services/taskService.js";
+import { timeEntryService } from "./modules/services/timeEntryService.js";
+import { invoiceService } from "./modules/services/invoiceService.js";
+import { settingsService } from "./modules/services/settingsService.js";
+import { initTimer, carregarDropdownsTimer } from "./modules/timer.js";
+import { initPomodoro, updatePomodoroSettings } from "./modules/pomodoro.js";
 import { initRelatorios } from "./modules/reports.js";
+import { showToast, showConfirm } from "./modules/ui.js";
 
 let _clientesCache = [];
 let _projetosCache = [];
 let _unsubTarefas = null;
+let _unsubTimeEntries = null;
+let _unsubInvoices = null;
+let _settingsCache = { taxa_horaria_padrao: 0 };
 
-// --- PROTEÇÃO E INICIALIZAÇÃO ---
+
 onAuthStateChanged(auth, (user) => {
   if (user) {
     const userDisplay = document.getElementById("userEmail");
-    if (userDisplay) userDisplay.textContent = user.email;
-    renderizarListas();
+    if (userDisplay) userDisplay.textContent = user.email || "Victor Hugo";
+    
+    
+    renderizarListas().then(() => {
+      initTimer();
+      iniciarListenerTimeEntries();
+      carregarConfiguracoes();
+      iniciarListenerInvoices();
+    });
+    
     window.switchPage("page-dashboard");
   } else {
     if (_unsubTarefas) {
       _unsubTarefas();
       _unsubTarefas = null;
     }
+    if (_unsubTimeEntries) {
+      _unsubTimeEntries();
+      _unsubTimeEntries = null;
+    }
+    if (_unsubInvoices) {
+      _unsubInvoices();
+      _unsubInvoices = null;
+    }
     window.location.href = "../index.html";
   }
 });
 
-// --- CONTROLE DE PÁGINAS (navbar do header) ---
-window.switchPage = (pageId) => {
+
+window.switchPage = (pageId, tabId = null) => {
   document.querySelectorAll(".page-content").forEach((page) => {
     page.style.display = "none";
   });
   const target = document.getElementById(pageId);
   if (target) target.style.display = "block";
 
-  document.querySelectorAll(".nav-page-btn").forEach((btn) => {
-    btn.classList.toggle(
-      "active",
-      btn.getAttribute("onclick")?.includes(pageId),
-    );
+  
+  if (pageId === "page-gestao" && tabId) {
+    const tabBtn = document.querySelector(`.tab-link[onclick*='${tabId}']`);
+    window.switchTab(tabId, tabBtn);
+  }
+
+  
+  document.querySelectorAll(".sidebar-link").forEach((btn) => {
+    const clickAttr = btn.getAttribute("onclick") || "";
+    if (pageId === "page-gestao" && tabId) {
+      btn.classList.toggle("active", clickAttr.includes(pageId) && clickAttr.includes(tabId));
+    } else {
+      btn.classList.toggle("active", clickAttr.includes(pageId) && !clickAttr.includes("tab-"));
+    }
   });
 };
 
-// --- CONTROLE DE ABAS (sub-nav da Gestão) ---
+
 window.switchTab = (tabId, btnEl) => {
   document.querySelectorAll(".tab-content").forEach((tab) => {
     tab.style.display = "none";
@@ -62,7 +96,7 @@ window.switchTab = (tabId, btnEl) => {
   renderizarListas();
 };
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
 
 function nomeCliente(clientId) {
   if (!clientId) return "Projeto Interno";
@@ -82,12 +116,12 @@ const STATUS_CLASS = {
   pausado: "badge-pausado",
 };
 
-// ─── RENDERIZAÇÃO ─────────────────────────────────────────────────────────────
+
 
 async function renderizarListas() {
   if (!auth.currentUser) return;
   try {
-    // --- CLIENTES (todos: ativos + inativos) ---
+    
     const clientes = await clientService.getAll();
     _clientesCache = clientes;
 
@@ -132,7 +166,7 @@ async function renderizarListas() {
       }
     }
 
-    // --- PROJETOS ---
+    
     const projetos = await projectService.getAll();
     const listaProj = document.getElementById("lista-projetos");
     if (listaProj) {
@@ -172,6 +206,8 @@ async function renderizarListas() {
   } catch (error) {
     console.error("Erro ao renderizar:", error);
   }
+  carregarDropdownsTimer();
+  carregarSelectClientesBilling();
 }
 
 async function carregarSelectClientes(selectId = "proj-cliente") {
@@ -244,9 +280,11 @@ async function iniciarListenerTarefas() {
             </span>
           </div>
           <div class="item-actions">
-            <span class="badge ${TASK_STATUS_CLASS[t.status] ?? "badge-pausado"}">
-              ${TASK_STATUS_LABEL[t.status] ?? t.status}
-            </span>
+            <select class="task-status-select" onchange="alterarStatusTarefa('${t.id}', this.value)">
+              <option value="todo" ${t.status === 'todo' ? 'selected' : ''}>A fazer</option>
+              <option value="doing" ${t.status === 'doing' ? 'selected' : ''}>Em progresso</option>
+              <option value="done" ${t.status === 'done' ? 'selected' : ''}>Concluída</option>
+            </select>
             <button class="btn-icon btn-edit" title="Editar"
               onclick="abrirEdicaoTarefa('${t.id}')">
               <i class="fa-solid fa-pen"></i>
@@ -262,18 +300,29 @@ async function iniciarListenerTarefas() {
   });
 }
 
-// ─── AÇÕES DE CLIENTE ─────────────────────────────────────────────────────────
+
 
 window.desativarCliente = async (id) => {
-  if (confirm("Deseja desativar este cliente?")) {
-    await clientService.softDelete(id);
-    renderizarListas();
+  const confirmado = await showConfirm("Deseja desativar este cliente?", "Desativar");
+  if (confirmado) {
+    try {
+      await clientService.softDelete(id);
+      await renderizarListas();
+      showToast("Cliente desativado com sucesso!", "success");
+    } catch (error) {
+      showToast("Erro ao desativar cliente: " + error.message, "error");
+    }
   }
 };
 
 window.reativarCliente = async (id) => {
-  await clientService.reactivate(id);
-  renderizarListas();
+  try {
+    await clientService.reactivate(id);
+    await renderizarListas();
+    showToast("Cliente reativado com sucesso!", "success");
+  } catch (error) {
+    showToast("Erro ao reativar cliente: " + error.message, "error");
+  }
 };
 
 window.abrirEdicaoCliente = async (id) => {
@@ -287,9 +336,15 @@ window.abrirEdicaoCliente = async (id) => {
 };
 
 window.deletarProjeto = async (id) => {
-  if (confirm("Excluir projeto permanentemente?")) {
-    await projectService.hardDelete(id);
-    renderizarListas();
+  const confirmado = await showConfirm("Excluir projeto permanentemente?");
+  if (confirmado) {
+    try {
+      await projectService.hardDelete(id);
+      await renderizarListas();
+      showToast("Projeto excluído com sucesso!", "success");
+    } catch (error) {
+      showToast("Erro ao excluir projeto: " + error.message, "error");
+    }
   }
 };
 
@@ -301,14 +356,21 @@ window.abrirEdicaoProjeto = async (id) => {
   document.getElementById("edit-proj-nome").value = proj.nome;
   document.getElementById("edit-proj-cliente").value = proj.client_id ?? "";
   document.getElementById("edit-proj-horas").value = proj.orcamento_horas ?? "";
+  document.getElementById("edit-proj-taxa").value = proj.taxa_horaria ?? "";
   document.getElementById("edit-proj-status").value =
     proj.status ?? "em_andamento";
   abrirModal("modal-editar-projeto");
 };
 
 window.deletarTarefa = async (id) => {
-  if (confirm("Excluir tarefa permanentemente?")) {
-    await taskService.hardDelete(id);
+  const confirmado = await showConfirm("Excluir tarefa permanentemente?");
+  if (confirmado) {
+    try {
+      await taskService.hardDelete(id);
+      showToast("Tarefa excluída com sucesso!", "success");
+    } catch (error) {
+      showToast("Erro ao excluir tarefa: " + error.message, "error");
+    }
   }
 };
 
@@ -322,7 +384,438 @@ window.abrirEdicaoTarefa = async (id) => {
   abrirModal("modal-editar-tarefa");
 };
 
-// ─── MODAL HELPERS ────────────────────────────────────────────────────────────
+
+
+function iniciarListenerTimeEntries() {
+  if (_unsubTimeEntries) _unsubTimeEntries();
+  _unsubTimeEntries = timeEntryService.listenAll((entries) => {
+    _timeEntriesCache = entries;
+    renderDashboard(entries);
+  });
+}
+
+function renderDashboard(entries) {
+  const listEl = document.getElementById("dashboard-activities-list");
+  if (!listEl) return;
+
+  
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  const amanha = new Date(hoje);
+  amanha.setDate(amanha.getDate() + 1);
+
+  const entriesHoje = entries.filter((e) => {
+    const d = new Date(e.start_time);
+    return d >= hoje && d < amanha;
+  });
+
+  
+  const dayOfWeek = hoje.getDay(); 
+  const startOfWeek = new Date(hoje);
+  const diff = hoje.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  startOfWeek.setDate(diff);
+  startOfWeek.setHours(0,0,0,0);
+  
+  const entriesSemana = entries.filter((e) => {
+    const d = new Date(e.start_time);
+    return d >= startOfWeek;
+  });
+
+  
+  const totalHojeSegundos = entriesHoje.reduce((sum, e) => sum + (e.duration || 0), 0);
+  const totalSemanaSegundos = entriesSemana.reduce((sum, e) => sum + (e.duration || 0), 0);
+  
+  const totalHojeHoras = totalHojeSegundos / 3600;
+  const totalSemanaHoras = totalSemanaSegundos / 3600;
+
+  
+  const elHoje = document.getElementById("metric-total-hoje");
+  const elSemana = document.getElementById("metric-total-semana");
+  const elReceita = document.getElementById("metric-receita-estimada");
+  const elProjetos = document.getElementById("metric-projetos-ativos");
+
+  if (elHoje) elHoje.textContent = `${totalHojeHoras.toFixed(1)}h`;
+  if (elSemana) elSemana.textContent = `${totalSemanaHoras.toFixed(1)}h`;
+  if (elReceita) {
+    let receitaHoje = 0;
+    entriesHoje.forEach((e) => {
+      let taxa = _settingsCache.taxa_horaria_padrao || 0;
+      if (e.project_id) {
+        const proj = _projetosCache.find((p) => p.id === e.project_id);
+        if (proj && proj.taxa_horaria !== undefined && proj.taxa_horaria !== null && proj.taxa_horaria > 0) {
+          taxa = proj.taxa_horaria;
+        }
+      }
+      receitaHoje += ((e.duration || 0) / 3600) * taxa;
+    });
+    elReceita.textContent = receitaHoje.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
+  const elTaxBase = document.getElementById("metric-taxa-base");
+  if (elTaxBase) {
+    const baseTaxFormatted = (_settingsCache.taxa_horaria_padrao || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+    elTaxBase.textContent = `Taxa Base: ${baseTaxFormatted}/h`;
+  }
+  if (elProjetos) {
+    
+    const ativosCount = _projetosCache.filter((p) => p.status === "em_andamento" || !p.status).length;
+    elProjetos.textContent = ativosCount || 0;
+  }
+
+  
+  if (entriesHoje.length === 0) {
+    listEl.innerHTML = `<div class="list-empty">Nenhum registro rastreado hoje ainda.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = entriesHoje
+    .map((e) => {
+      const duracaoStr = formatDuration(e.duration || 0);
+      const desc = e.description ? e.description : "Sem Descrição";
+      const descClass = e.description ? "" : "empty";
+
+      
+      const startD = new Date(e.start_time);
+      const endD = new Date(e.end_time);
+      const timeStr = `${formatHour(startD)} - ${formatHour(endD)}`;
+
+      
+      let tagsHTML = "";
+      if (e.project_id) {
+        const projName = nomeProjeto(e.project_id);
+        tagsHTML += `<span class="tag-project">${projName}</span>`;
+      }
+      if (e.client_id) {
+        const cliName = nomeCliente(e.client_id);
+        tagsHTML += `<span class="tag-client">${cliName}</span>`;
+      }
+
+      
+      if (!e.project_id && !e.client_id) {
+        tagsHTML += `<button class="btn-link-action" onclick="abrirEdicaoTimeEntry('${e.id}')">Vincular Cliente/Projeto</button>`;
+      }
+
+      return `
+        <div class="activity-item">
+          <div class="activity-left">
+            <i class="fa-solid fa-circle-play activity-play-indicator"></i>
+            <span class="activity-duration">${duracaoStr}</span>
+            <div class="activity-details">
+              <span class="activity-description ${descClass}">${desc}</span>
+              <div class="activity-tags">
+                ${tagsHTML}
+              </div>
+            </div>
+          </div>
+          <div class="activity-right">
+            <span class="activity-time">${timeStr}</span>
+            <button class="btn-edit-activity" onclick="abrirEdicaoTimeEntry('${e.id}')" title="Editar Registro" style="background:transparent; border:none; color:var(--text-sub); cursor:pointer; font-size:1rem; padding:0.5rem; transition:color 0.2s;">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn-delete-activity" onclick="deletarRegistroTempo('${e.id}')" title="Excluir Registro">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function formatDuration(totalSeconds) {
+  const hrs = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m`;
+  }
+  return `${mins}m`;
+}
+
+function formatHour(dateObj) {
+  const hrs = dateObj.getHours().toString().padStart(2, "0");
+  const mins = dateObj.getMinutes().toString().padStart(2, "0");
+  return `${hrs}:${mins}`;
+}
+
+window.deletarRegistroTempo = async (id) => {
+  const confirmado = await showConfirm("Excluir este registro de tempo permanentemente?");
+  if (confirmado) {
+    try {
+      await timeEntryService.delete(id);
+      showToast("Registro de tempo excluído com sucesso!", "success");
+    } catch (error) {
+      showToast("Erro ao excluir registro de tempo: " + error.message, "error");
+    }
+  }
+};
+
+window.abrirEdicaoTimeEntry = async (id) => {
+  const entry = _timeEntriesCache.find(e => e.id === id);
+  if (!entry) return;
+
+  
+  await carregarSelectClientes("edit-te-cliente");
+  await carregarSelectProjetos("edit-te-projeto");
+
+  document.getElementById("edit-te-id").value = id;
+  document.getElementById("edit-te-desc").value = entry.description || "";
+  document.getElementById("edit-te-cliente").value = entry.client_id || "";
+  document.getElementById("edit-te-projeto").value = entry.project_id || "";
+
+  abrirModal("modal-editar-time-entry");
+};
+
+
+
+let _timeEntriesCache = [];
+let _generatedReport = null;
+
+async function carregarSelectClientesBilling() {
+  if (!auth.currentUser) return;
+  try {
+    const clientes = await clientService.getAllActive();
+    const select = document.getElementById("billing-client");
+    if (select) {
+      const options = clientes.map(
+        (c) => `<option value="${c.id}">${c.nome}</option>`
+      );
+      select.innerHTML = '<option value="todos">Todos os Clientes</option>' + options.join("");
+    }
+  } catch (error) {
+    console.error("Erro ao carregar clientes faturamento:", error);
+  }
+}
+
+async function carregarConfiguracoes() {
+  try {
+    const settings = await settingsService.get();
+    if (settings) {
+      _settingsCache = settings;
+      const inputTaxa = document.getElementById("config-taxa-padrao");
+      if (inputTaxa) inputTaxa.value = settings.taxa_horaria_padrao || 0;
+      
+      const inputMoeda = document.getElementById("config-moeda");
+      if (inputMoeda && settings.moeda) inputMoeda.value = settings.moeda;
+      
+      const inputTema = document.getElementById("config-tema");
+      if (inputTema && settings.tema) {
+        inputTema.value = settings.tema;
+        document.body.dataset.theme = settings.tema;
+        localStorage.setItem("tf-tema", settings.tema);
+        if (window.atualizarIconeTema) window.atualizarIconeTema();
+      }
+
+      const inputFoco = document.getElementById("config-pomodoro-foco");
+      if (inputFoco && settings.pomodoro_foco) inputFoco.value = settings.pomodoro_foco;
+
+      const inputPausa = document.getElementById("config-pomodoro-pausa");
+      if (inputPausa && settings.pomodoro_pausa) inputPausa.value = settings.pomodoro_pausa;
+
+      initPomodoro(settings);
+
+      
+      if (_timeEntriesCache && _timeEntriesCache.length > 0) {
+        renderDashboard(_timeEntriesCache);
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao carregar configurações:", error);
+  }
+}
+
+function iniciarListenerInvoices() {
+  if (_unsubInvoices) _unsubInvoices();
+  _unsubInvoices = invoiceService.listenAll((invoices) => {
+    renderInvoices(invoices);
+  });
+}
+
+function renderInvoices(invoices) {
+  const tbody = document.getElementById("billing-invoices-tbody");
+  if (!tbody) return;
+
+  if (invoices.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-sub); font-size: 0.875rem;">
+          Nenhuma fatura cadastrada.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = invoices
+    .map((inv) => {
+      let clientName = "Todos os Clientes";
+      if (inv.client_id !== "todos") {
+        clientName = nomeCliente(inv.client_id);
+      }
+
+      const totalValueFormatted = inv.valor_total.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+
+      return `
+        <tr style="border-bottom: 1px solid var(--border-color);">
+          <td style="padding: 0.875rem 1rem; color: var(--text-main); font-weight: 500;">${clientName}</td>
+          <td style="padding: 0.875rem 1rem; color: var(--text-main); font-family: monospace;">${inv.mes_referencia}</td>
+          <td style="padding: 0.875rem 1rem; color: var(--text-main); font-family: monospace;">${inv.total_horas.toFixed(1)}h</td>
+          <td style="padding: 0.875rem 1rem; color: var(--text-main); font-weight: 600;">${totalValueFormatted}</td>
+          <td style="padding: 0.875rem 1rem;">
+            <select class="task-status-select" onchange="alterarStatusFatura('${inv.id}', this.value)" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 4px; background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);">
+              <option value="pendente" ${inv.status === "pendente" ? "selected" : ""}>Pendente</option>
+              <option value="pago" ${inv.status === "pago" ? "selected" : ""}>Pago</option>
+              <option value="cancelado" ${inv.status === "cancelado" ? "selected" : ""}>Cancelado</option>
+            </select>
+          </td>
+          <td style="padding: 0.875rem 1rem; text-align: right;">
+            <button class="btn-delete-activity" onclick="deletarFatura('${inv.id}')" title="Excluir Fatura">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+window.alterarStatusFatura = async (id, status) => {
+  try {
+    await invoiceService.updateStatus(id, status);
+    showToast("Status da fatura atualizado!", "success");
+  } catch (error) {
+    showToast("Erro ao alterar status da fatura: " + error.message, "error");
+  }
+};
+
+window.deletarFatura = async (id) => {
+  const confirmado = await showConfirm("Excluir esta fatura permanentemente?");
+  if (confirmado) {
+    try {
+      await invoiceService.delete(id);
+      showToast("Fatura excluída com sucesso!", "success");
+    } catch (error) {
+      showToast("Erro ao deletar fatura: " + error.message, "error");
+    }
+  }
+};
+
+window.alterarStatusTarefa = async (id, status) => {
+  try {
+    await taskService.updateStatus(id, status);
+    showToast("Status da tarefa atualizado!", "success");
+  } catch (error) {
+    showToast("Erro ao alterar status da tarefa: " + error.message, "error");
+  }
+};
+
+function gerarRelatorioFaturamento() {
+  const monthInput = document.getElementById("billing-month");
+  const clientSelect = document.getElementById("billing-client");
+
+  if (!monthInput || !monthInput.value) {
+    showToast("Selecione o mês de referência.", "error");
+    return;
+  }
+
+  const selectedMonth = monthInput.value; 
+  const selectedClient = clientSelect ? clientSelect.value : "todos";
+
+  
+  const filteredEntries = _timeEntriesCache.filter((e) => {
+    if (!e.start_time.startsWith(selectedMonth)) return false;
+    if (selectedClient !== "todos" && e.client_id !== selectedClient) return false;
+    return true;
+  });
+
+  let totalDurationSeconds = 0;
+  let totalValue = 0;
+
+  filteredEntries.forEach((entry) => {
+    totalDurationSeconds += entry.duration || 0;
+
+    
+    let taxa = 0;
+    if (entry.project_id) {
+      const proj = _projetosCache.find((p) => p.id === entry.project_id);
+      if (proj && proj.taxa_horaria !== undefined && proj.taxa_horaria !== null && proj.taxa_horaria > 0) {
+        taxa = proj.taxa_horaria;
+      } else {
+        taxa = _settingsCache.taxa_horaria_padrao || 0;
+      }
+    } else {
+      taxa = _settingsCache.taxa_horaria_padrao || 0;
+    }
+
+    const value = ((entry.duration || 0) / 3600) * taxa;
+    totalValue += value;
+  });
+
+  const totalHours = totalDurationSeconds / 3600;
+
+  
+  const elHours = document.getElementById("billing-total-hours");
+  const elValue = document.getElementById("billing-total-value");
+  const btnSave = document.getElementById("btn-billing-save");
+
+  if (elHours) elHours.textContent = `${totalHours.toFixed(1)}h`;
+  if (elValue) {
+    elValue.textContent = totalValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
+
+  if (btnSave) {
+    btnSave.disabled = false;
+  }
+
+  _generatedReport = {
+    client_id: selectedClient,
+    mes_referencia: selectedMonth,
+    total_horas: totalHours,
+    valor_total: totalValue
+  };
+}
+
+async function salvarFaturaGerada() {
+  if (!_generatedReport) return;
+  const btnSave = document.getElementById("btn-billing-save");
+  if (btnSave) btnSave.disabled = true;
+
+  try {
+    await invoiceService.create(
+      _generatedReport.client_id,
+      _generatedReport.mes_referencia,
+      _generatedReport.total_horas,
+      _generatedReport.valor_total
+    );
+
+    showToast("Fatura salva com sucesso!", "success");
+
+    
+    _generatedReport = null;
+    const elHours = document.getElementById("billing-total-hours");
+    const elValue = document.getElementById("billing-total-value");
+    if (elHours) elHours.textContent = "0.0h";
+    if (elValue) elValue.textContent = "R$ 0,00";
+
+    const monthInput = document.getElementById("billing-month");
+    if (monthInput) monthInput.value = "";
+  } catch (error) {
+    showToast("Erro ao salvar fatura: " + error.message, "error");
+    if (btnSave) btnSave.disabled = false;
+  }
+}
+
+
 
 function abrirModal(id) {
   document.getElementById(id)?.classList.add("open");
@@ -332,37 +825,40 @@ window.fecharModal = (id) => {
   document.getElementById(id)?.classList.remove("open");
 };
 
-// Fecha modal clicando no overlay
+
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("modal-overlay")) {
     e.target.classList.remove("open");
   }
 });
 
-// ─── EVENTOS ──────────────────────────────────────────────────────────────────
+
 
 document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
     if (user) iniciarListenerTarefas();
   });
 
-  document.getElementById("btnSair")?.addEventListener("click", async () => {
+  const logoutAction = async () => {
     await signOut(auth);
     window.location.href = "./login.html";
-  });
+  };
+  document.getElementById("btnSair")?.addEventListener("click", logoutAction);
+  document.getElementById("btn-config-rapida")?.addEventListener("click", logoutAction);
+  document.getElementById("btnSairConfig")?.addEventListener("click", logoutAction);
 
-  // ── Tema dark / light ──────────────────────────────────────────────────────
+  
   const btnTema = document.getElementById("btn-tema");
   const body    = document.body;
 
-  function atualizarIconeTema() {
+  window.atualizarIconeTema = function() {
     const isDark = body.dataset.theme === "dark";
     if (!btnTema) return;
     btnTema.innerHTML = isDark
       ? '<i class="fa-solid fa-sun"></i>'
       : '<i class="fa-solid fa-moon"></i>';
     btnTema.title = isDark ? "Ativar modo claro" : "Ativar modo escuro";
-  }
+  };
 
   btnTema?.addEventListener("click", () => {
     const isDark = body.dataset.theme === "dark";
@@ -371,45 +867,69 @@ document.addEventListener("DOMContentLoaded", () => {
     atualizarIconeTema();
   });
 
-  // Persiste tema salvo no localStorage
+  
   const temaSalvo = localStorage.getItem("tf-tema");
   if (temaSalvo) body.dataset.theme = temaSalvo;
   atualizarIconeTema();
 
-  // ── Relatórios ────────────────────────────────────────────────────────────
+  
   initRelatorios();
 
-  // Form: criar cliente
+  
+  document.getElementById("btn-novo-cliente")?.addEventListener("click", () => {
+    abrirModal("modal-novo-cliente");
+  });
+
+  document.getElementById("btn-novo-projeto")?.addEventListener("click", async () => {
+    await carregarSelectClientes("new-proj-cliente");
+    abrirModal("modal-novo-projeto");
+  });
+
+  document.getElementById("btn-nova-tarefa")?.addEventListener("click", async () => {
+    await carregarSelectProjetos("new-tar-projeto");
+    abrirModal("modal-nova-tarefa");
+  });
+
+  
   document
-    .getElementById("form-cliente")
+    .getElementById("form-novo-cliente")
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const nome = document.getElementById("cli-nome").value.trim();
+      const nome = document.getElementById("new-cli-nome").value.trim();
       const contato =
-        document.getElementById("cli-contato").value.trim() || null;
-      await clientService.create(nome, contato);
-      e.target.reset();
-      renderizarListas();
+        document.getElementById("new-cli-contato").value.trim() || null;
+      try {
+        await clientService.create(nome, contato);
+        e.target.reset();
+        window.fecharModal("modal-novo-cliente");
+        await renderizarListas();
+        showToast("Cliente cadastrado com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao cadastrar cliente: " + error.message, "error");
+      }
     });
 
-  // Form: criar projeto
+  
   document
-    .getElementById("form-projeto")
+    .getElementById("form-novo-projeto")
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const nome = document.getElementById("proj-nome").value.trim();
-      const cliId = document.getElementById("proj-cliente").value || null;
-      const horas = document.getElementById("proj-horas").value || null;
-      await projectService.create(nome, cliId, horas);
-      e.target.reset();
-      renderizarListas();
-      const btnProjetos = document.querySelector(
-        ".tab-link[onclick*='tab-projetos']",
-      );
-      window.switchTab("tab-projetos", btnProjetos);
+      const nome = document.getElementById("new-proj-nome").value.trim();
+      const cliId = document.getElementById("new-proj-cliente").value || null;
+      const horas = document.getElementById("new-proj-horas").value || null;
+      const taxa = document.getElementById("new-proj-taxa").value || null;
+      try {
+        await projectService.create(nome, cliId, horas, taxa);
+        e.target.reset();
+        window.fecharModal("modal-novo-projeto");
+        await renderizarListas();
+        showToast("Projeto criado com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao criar projeto: " + error.message, "error");
+      }
     });
 
-  // Form: editar cliente
+  
   document
     .getElementById("form-editar-cliente")
     ?.addEventListener("submit", async (e) => {
@@ -418,11 +938,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const nome = document.getElementById("edit-cli-nome").value.trim();
       const contato =
         document.getElementById("edit-cli-contato").value.trim() || null;
-      await clientService.update(id, { nome, contato });
-      window.fecharModal("modal-editar-cliente");
-      renderizarListas();
+      try {
+        await clientService.update(id, { nome, contato });
+        window.fecharModal("modal-editar-cliente");
+        await renderizarListas();
+        showToast("Cliente atualizado com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao atualizar cliente: " + error.message, "error");
+      }
     });
 
+  
   document
     .getElementById("form-editar-projeto")
     ?.addEventListener("submit", async (e) => {
@@ -433,27 +959,43 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("edit-proj-cliente").value || null;
       const orcamento_horas =
         document.getElementById("edit-proj-horas").value || null;
+      const taxa_horaria =
+        document.getElementById("edit-proj-taxa").value || null;
       const status = document.getElementById("edit-proj-status").value;
-      await projectService.update(id, {
-        nome,
-        client_id,
-        orcamento_horas,
-        status,
-      });
-      window.fecharModal("modal-editar-projeto");
-      renderizarListas();
+      try {
+        await projectService.update(id, {
+          nome,
+          client_id,
+          orcamento_horas,
+          taxa_horaria,
+          status,
+        });
+        window.fecharModal("modal-editar-projeto");
+        await renderizarListas();
+        showToast("Projeto atualizado com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao atualizar projeto: " + error.message, "error");
+      }
     });
 
+  
   document
-    .getElementById("form-tarefa")
+    .getElementById("form-nova-tarefa")
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const projectId = document.getElementById("tar-projeto").value || null;
-      const titulo = document.getElementById("tar-titulo").value.trim();
-      await taskService.create(projectId, titulo);
-      e.target.reset();
+      const projectId = document.getElementById("new-tar-projeto").value || null;
+      const titulo = document.getElementById("new-tar-titulo").value.trim();
+      try {
+        await taskService.create(projectId, titulo);
+        e.target.reset();
+        window.fecharModal("modal-nova-tarefa");
+        showToast("Tarefa criada com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao criar tarefa: " + error.message, "error");
+      }
     });
 
+  
   document
     .getElementById("form-editar-tarefa")
     ?.addEventListener("submit", async (e) => {
@@ -462,7 +1004,77 @@ document.addEventListener("DOMContentLoaded", () => {
       const titulo = document.getElementById("edit-tar-titulo").value.trim();
       const project_id =
         document.getElementById("edit-tar-projeto").value || null;
-      await taskService.update(id, { titulo, project_id });
-      window.fecharModal("modal-editar-tarefa");
+      try {
+        await taskService.update(id, { titulo, project_id });
+        window.fecharModal("modal-editar-tarefa");
+        showToast("Tarefa atualizada com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao atualizar tarefa: " + error.message, "error");
+      }
     });
+
+  
+  document
+    .getElementById("form-editar-time-entry")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("edit-te-id").value;
+      const description = document.getElementById("edit-te-desc").value.trim();
+      const client_id = document.getElementById("edit-te-cliente").value || null;
+      const project_id = document.getElementById("edit-te-projeto").value || null;
+
+      try {
+        await timeEntryService.update(id, { description, client_id, project_id });
+        window.fecharModal("modal-editar-time-entry");
+        showToast("Apontamento atualizado com sucesso!", "success");
+      } catch (error) {
+        showToast("Erro ao atualizar apontamento: " + error.message, "error");
+      }
+    });
+
+  
+  document
+    .getElementById("form-configuracoes")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const taxa = parseFloat(document.getElementById("config-taxa-padrao").value) || 0;
+      const moeda = document.getElementById("config-moeda").value || "BRL";
+      const tema = document.getElementById("config-tema").value || "dark";
+      const pomodoro_foco = parseInt(document.getElementById("config-pomodoro-foco").value) || 25;
+      const pomodoro_pausa = parseInt(document.getElementById("config-pomodoro-pausa").value) || 5;
+
+      try {
+        await settingsService.update({ 
+          taxa_horaria_padrao: taxa,
+          moeda,
+          tema,
+          pomodoro_foco,
+          pomodoro_pausa
+        });
+
+        
+        document.body.dataset.theme = tema;
+        localStorage.setItem("tf-tema", tema);
+        if (window.atualizarIconeTema) window.atualizarIconeTema();
+        updatePomodoroSettings(pomodoro_foco, pomodoro_pausa);
+
+        showToast("Configurações salvas com sucesso!", "success");
+        _settingsCache = { ..._settingsCache, taxa_horaria_padrao: taxa, moeda, tema, pomodoro_foco, pomodoro_pausa };
+        
+        if (_timeEntriesCache && _timeEntriesCache.length > 0) {
+          renderDashboard(_timeEntriesCache);
+        }
+      } catch (error) {
+        showToast("Erro ao salvar configurações: " + error.message, "error");
+      }
+    });
+
+  
+  document
+    .getElementById("btn-billing-generate")
+    ?.addEventListener("click", gerarRelatorioFaturamento);
+
+  document
+    .getElementById("btn-billing-save")
+    ?.addEventListener("click", salvarFaturaGerada);
 });

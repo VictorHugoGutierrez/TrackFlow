@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" type="image/png" href="images/Trackflow.png" />
   </head>
 
   <body>
@@ -92,7 +93,7 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 aria-hidden="true"
-                style="display: none"
+                class="d-none"
               >
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
@@ -118,7 +119,7 @@
       </div>
     </header>
 
-    <!-- Mobile Menu -->
+
     <nav
       id="mobile-menu"
       class="mobile-menu"
@@ -134,7 +135,6 @@
     </nav>
 
     <main>
-      <!-- ==================== HERO ==================== -->
       <section id="hero" aria-labelledby="hero-title">
         <div class="hero-blob hero-blob-1" aria-hidden="true"></div>
         <div class="hero-blob hero-blob-2" aria-hidden="true"></div>
@@ -214,7 +214,6 @@
               </div>
             </div>
 
-            <!-- App Mockup -->
             <div class="hero-mockup" aria-hidden="true">
               <div class="mockup-glow"></div>
               <div class="app-window">
@@ -241,7 +240,6 @@
                       id="mockup-play-btn"
                       aria-label="Iniciar ou parar cronômetro"
                     >
-                      <!-- Play Icon -->
                       <svg
                         id="play-icon"
                         viewBox="0 0 24 24"
@@ -249,12 +247,11 @@
                       >
                         <path d="M8 5v14l11-7z" />
                       </svg>
-                      <!-- Stop Icon -->
                       <svg
                         id="stop-icon"
                         viewBox="0 0 24 24"
                         aria-hidden="true"
-                        style="display: none"
+                        class="d-none"
                       >
                         <rect x="6" y="6" width="12" height="12" />
                       </svg>
@@ -272,9 +269,8 @@
                     <div class="project-item" role="listitem">
                       <div class="project-info">
                         <div
-                          class="project-color"
-                          style="background: #108981"
-                        ></div>
+                          class="project-color bg-teal"
+                      ></div>
                         <div>
                           <div class="project-name">Design do Dashboard</div>
                           <div class="project-client">Acme Corp</div>
@@ -285,9 +281,8 @@
                     <div class="project-item" role="listitem">
                       <div class="project-info">
                         <div
-                          class="project-color"
-                          style="background: #3b82f6"
-                        ></div>
+                          class="project-color bg-blue"
+                      ></div>
                         <div>
                           <div class="project-name">API Integration</div>
                           <div class="project-client">StartupXYZ</div>
@@ -298,9 +293,8 @@
                     <div class="project-item" role="listitem">
                       <div class="project-info">
                         <div
-                          class="project-color"
-                          style="background: #8b5cf6"
-                        ></div>
+                          class="project-color bg-purple"
+                      ></div>
                         <div>
                           <div class="project-name">Reunião de Alinhamento</div>
                           <div class="project-client">Interno</div>
@@ -316,7 +310,6 @@
         </div>
       </section>
 
-      <!-- ==================== PHILOSOPHY ==================== -->
       <section id="filosofia" aria-labelledby="filosofia-title">
         <div class="container">
           <header class="section-header reveal">
@@ -384,7 +377,6 @@
         </div>
       </section>
 
-      <!-- ==================== FEATURES ==================== -->
       <section id="funcionalidades" aria-labelledby="funcionalidades-title">
         <div class="container">
           <header class="section-header reveal">
@@ -518,18 +510,10 @@
         </div>
       </section>
 
-      <!-- ==================== HOW IT WORKS ==================== -->
       <section id="como-funciona" aria-labelledby="como-funciona-title">
         <div class="container">
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 80px;
-              align-items: start;
-            "
-          >
-            <header class="reveal" style="position: sticky; top: 120px">
+          <div class="how-it-works-grid">
+            <header class="reveal sticky-header-120">
               <div class="section-label" aria-hidden="true">
                 <svg
                   width="14"
@@ -547,11 +531,11 @@
                 Do cadastro à fatura em
                 <span class="gradient-text">4 passos</span>
               </h2>
-              <p class="section-sub" style="margin-bottom: 32px">
+              <p class="section-sub mb-32">
                 Um fluxo de trabalho pensado para ser natural e sem atrito, do
                 primeiro login até o fechamento do mês.
               </p>
-              <a href="#precos" class="btn-cta" style="display: inline-flex">
+              <a href="#precos" class="btn-cta d-inline-flex">
                 Começar Agora
                 <svg
                   width="16"
@@ -586,9 +570,9 @@
                   <h3 class="timeline-title">O Ciclo de Trabalho</h3>
                   <p class="timeline-desc">
                     Clique em
-                    <strong style="color: var(--play-color)">▶ Play</strong>
+                    <strong class="text-play">▶ Play</strong>
                     para iniciar. Foque no seu trabalho. Quando terminar, clique
-                    em <strong style="color: var(--stop-color)">■ Stop</strong>.
+                    em <strong class="text-stop">■ Stop</strong>.
                     Simples assim. O timestamp é salvo automaticamente.
                   </p>
                 </div>
@@ -622,7 +606,6 @@
         </div>
       </section>
 
-      <!-- ==================== PRICING ==================== -->
       <section id="precos" aria-labelledby="precos-title">
         <div class="container">
           <header class="section-header reveal">
@@ -840,7 +823,7 @@
       </section>
     </main>
 
-    <!-- ==================== FOOTER ==================== -->
+    
     <footer id="footer" role="contentinfo">
       <div class="container">
         <div class="footer-inner">
