@@ -768,6 +768,8 @@ body.page-app main {
 
   .rel-header { flex-direction: column; }
 
+  .invoice-form-grid { grid-template-columns: 1fr; }
+
   .rel-kpi-grid { grid-template-columns: repeat(2, 1fr); }
 
   .rel-filters { flex-direction: column; }
