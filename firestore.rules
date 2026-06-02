@@ -2,44 +2,266 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUserDoc(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function ownsIncomingData() {
+      return isSignedIn()
+        && request.resource.data.user_id == request.auth.uid;
+    }
+
+    function ownsExistingData() {
+      return isSignedIn()
+        && resource.data.user_id == request.auth.uid;
+    }
+
+    function ownershipUnchanged() {
+      return request.resource.data.user_id == resource.data.user_id;
+    }
+
+    function isOptionalString(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || request.resource.data[field] is string;
+    }
+
+    function isOptionalNumber(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || request.resource.data[field] is number;
+    }
+
+    function isOptionalBool(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || request.resource.data[field] is bool;
+    }
+
+    function isOptionalList(field, maxSize) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || (request.resource.data[field] is list
+          && request.resource.data[field].size() <= maxSize);
+    }
+
+    function isValidEmailString(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || (request.resource.data[field] is string
+          && request.resource.data[field].size() <= 254);
+    }
+
+    function hasValidTimestampStrings() {
+      return isOptionalString("criado_em")
+        && isOptionalString("atualizado_em");
+    }
+
+    function isValidClient() {
+      return request.resource.data.keys().hasOnly([
+          "user_id", "nome", "contato", "ativo", "criado_em", "atualizado_em"
+        ])
+        && ownsIncomingData()
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() > 0
+        && request.resource.data.nome.size() <= 160
+        && isValidEmailString("contato")
+        && request.resource.data.ativo is bool
+        && hasValidTimestampStrings();
+    }
+
+    function isValidProject() {
+      return request.resource.data.keys().hasOnly([
+          "user_id", "client_id", "nome", "orcamento_horas", "status",
+          "taxa_horaria", "criado_em", "atualizado_em"
+        ])
+        && ownsIncomingData()
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() > 0
+        && request.resource.data.nome.size() <= 180
+        && isOptionalString("client_id")
+        && isOptionalNumber("orcamento_horas")
+        && isOptionalNumber("taxa_horaria")
+        && request.resource.data.status in [
+          "em_andamento", "concluido", "pausado"
+        ]
+        && hasValidTimestampStrings();
+    }
+
+    function isValidTask() {
+      return request.resource.data.keys().hasOnly([
+          "user_id", "project_id", "titulo", "status",
+          "criado_em", "atualizado_em"
+        ])
+        && ownsIncomingData()
+        && request.resource.data.titulo is string
+        && request.resource.data.titulo.size() > 0
+        && request.resource.data.titulo.size() <= 200
+        && isOptionalString("project_id")
+        && request.resource.data.status in ["todo", "doing", "done"]
+        && hasValidTimestampStrings();
+    }
+
+    function isValidUserProfile(userId) {
+      return isUserDoc(userId)
+        && request.resource.data.keys().hasOnly([
+          "nome", "email", "photo_url", "email_verified", "plano",
+          "provider", "provider_id", "providers", "criado_em", "atualizado_em"
+        ])
+        && isOptionalString("nome")
+        && isValidEmailString("email")
+        && isOptionalString("photo_url")
+        && isOptionalBool("email_verified")
+        && isOptionalString("plano")
+        && isOptionalString("provider")
+        && isOptionalString("provider_id")
+        && isOptionalList("providers", 10)
+        && hasValidTimestampStrings();
+    }
+
+    function isValidUserSettings(userId) {
+      return isUserDoc(userId)
+        && request.resource.data.keys().hasOnly([
+          "taxa_horaria_padrao", "moeda", "tema_interface", "tema",
+          "pomodoro", "pomodoro_foco", "pomodoro_pausa", "atualizado_em"
+        ])
+        && request.resource.data.taxa_horaria_padrao is number
+        && request.resource.data.taxa_horaria_padrao >= 0
+        && request.resource.data.moeda is string
+        && request.resource.data.moeda.size() == 3
+        && (!("tema_interface" in request.resource.data)
+          || request.resource.data.tema_interface in ["dark", "light"])
+        && (!("tema" in request.resource.data)
+          || request.resource.data.tema in ["dark", "light"])
+        && (!("pomodoro" in request.resource.data)
+          || request.resource.data.pomodoro is map)
+        && (!("pomodoro_foco" in request.resource.data)
+          || (request.resource.data.pomodoro_foco is number
+            && request.resource.data.pomodoro_foco > 0))
+        && (!("pomodoro_pausa" in request.resource.data)
+          || (request.resource.data.pomodoro_pausa is number
+            && request.resource.data.pomodoro_pausa > 0))
+        && isOptionalString("atualizado_em");
+    }
+
+    function isValidInvoice() {
+      return request.resource.data.keys().hasOnly([
+          "user_id", "client_id", "project_id", "client_nome", "project_nome",
+          "numero", "descricao", "email_to", "status", "valor_total", "moeda",
+          "total_horas", "mes_referencia", "emitida_em", "vencimento_em",
+          "paga_em", "email_status", "email_sent_at", "email_error",
+          "email_request_id", "criado_em", "atualizado_em"
+        ])
+        && ownsIncomingData()
+        && isOptionalString("client_id")
+        && isOptionalString("project_id")
+        && isOptionalString("client_nome")
+        && isOptionalString("project_nome")
+        && isOptionalString("numero")
+        && isOptionalString("descricao")
+        && isValidEmailString("email_to")
+        && request.resource.data.status in [
+          "rascunho", "pendente", "pago", "atrasado", "cancelado"
+        ]
+        && request.resource.data.valor_total is number
+        && request.resource.data.valor_total >= 0
+        && isOptionalNumber("total_horas")
+        && isOptionalString("mes_referencia")
+        && request.resource.data.moeda is string
+        && request.resource.data.moeda.size() == 3
+        && request.resource.data.emitida_em is string
+        && isOptionalString("vencimento_em")
+        && isOptionalString("paga_em")
+        && request.resource.data.email_status in [
+          "nao_enviado", "pendente", "enviado", "erro"
+        ]
+        && isOptionalString("email_sent_at")
+        && isOptionalString("email_error")
+        && isOptionalString("email_request_id")
+        && hasValidTimestampStrings();
+    }
+
+    function isValidInvoiceEmailRequest() {
+      return request.resource.data.keys().hasOnly([
+          "user_id", "invoice_id", "to", "subject", "status", "attempts",
+          "error", "created_at", "updated_at"
+        ])
+        && ownsIncomingData()
+        && request.resource.data.invoice_id is string
+        && request.resource.data.invoice_id.size() > 0
+        && isValidEmailString("to")
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() > 0
+        && request.resource.data.subject.size() <= 180
+        && request.resource.data.status in ["pendente", "enviado", "erro"]
+        && request.resource.data.attempts is number
+        && request.resource.data.attempts >= 0
+        && isOptionalString("error")
+        && isOptionalString("created_at")
+        && isOptionalString("updated_at");
+    }
+
+    match /users/{userId} {
+      allow read: if isUserDoc(userId);
+      allow create, update: if isValidUserProfile(userId);
+      allow delete: if false;
+    }
+
+    match /user_settings/{userId} {
+      allow read: if isUserDoc(userId);
+      allow create, update: if isValidUserSettings(userId);
+      allow delete: if false;
+    }
+
     match /clients/{docId} {
-      allow read, update, delete: if request.auth != null
-        && request.auth.uid == resource.data.user_id;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.user_id;
+      allow read, delete: if ownsExistingData();
+      allow create: if isValidClient();
+      allow update: if ownsExistingData()
+        && ownershipUnchanged()
+        && isValidClient();
     }
 
     match /projects/{docId} {
-      allow read, update, delete: if request.auth != null
-        && request.auth.uid == resource.data.user_id;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.user_id;
+      allow read, delete: if ownsExistingData();
+      allow create: if isValidProject();
+      allow update: if ownsExistingData()
+        && ownershipUnchanged()
+        && isValidProject();
     }
 
     match /tasks/{docId} {
-      allow read, update, delete: if request.auth != null
-        && request.auth.uid == resource.data.user_id;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.user_id;
+      allow read, delete: if ownsExistingData();
+      allow create: if isValidTask();
+      allow update: if ownsExistingData()
+        && ownershipUnchanged()
+        && isValidTask();
     }
 
     match /time_entries/{docId} {
-      allow read, update, delete: if request.auth != null
-        && request.auth.uid == resource.data.user_id;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.user_id;
+      allow read, update, delete: if ownsExistingData();
+      allow create: if ownsIncomingData();
     }
 
     match /invoices/{docId} {
-      allow read, update, delete: if request.auth != null
-        && request.auth.uid == resource.data.user_id;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.user_id;
+      allow read, delete: if ownsExistingData();
+      allow create: if isValidInvoice();
+      allow update: if ownsExistingData()
+        && ownershipUnchanged()
+        && isValidInvoice();
     }
 
-    match /user_settings/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == docId;
+    match /invoice_email_requests/{docId} {
+      allow read: if ownsExistingData();
+      allow create: if isValidInvoiceEmailRequest();
+      allow update, delete: if false;
     }
 
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
