@@ -18,7 +18,17 @@
   },
   "auth": {
     "providers": {
-      "emailPassword": true
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "TrackFlow",
+        "supportEmail": "support@trackflow-web.firebaseapp.com",
+        "authorizedRedirectUris": [
+          "https://trackflow-web.firebaseapp.com",
+          "https://trackflow-web.web.app",
+          "http://localhost:5000",
+          "http://localhost:5173"
+        ]
+      }
     }
   }
 }

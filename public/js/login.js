@@ -1,4 +1,4 @@
-import { cadastrarUsuario, loginUsuario } from "./auth.js";
+import { cadastrarUsuario, loginUsuario, loginComGoogle } from "./auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const linkAlternar = document.getElementById("link-alternar-modo");
@@ -10,23 +10,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const form = document.getElementById("form-autenticacao");
+  const btnGoogle = document.getElementById("btn-google");
 
   if (form) {
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const btnEntrar = document.getElementById("btnEntrar");
-      if (btnEntrar) {
-        const nome = document.getElementById("input-nome").value ?? "";
-        const email = document.getElementById("input-email").value ?? "";
-        const senha = document.getElementById("input-senha").value ?? "";
-        if (btnEntrar.innerText === "Entrar") {
-          loginUsuario(email, senha);
+      if (!btnEntrar) return;
+
+      const nome = document.getElementById("input-nome").value ?? "";
+      const email = document.getElementById("input-email").value ?? "";
+      const senha = document.getElementById("input-senha").value ?? "";
+      const labelOriginal = btnEntrar.textContent;
+
+      btnEntrar.disabled = true;
+      btnEntrar.textContent =
+        labelOriginal.trim() === "Entrar" ? "Entrando..." : "Cadastrando...";
+
+      try {
+        if (labelOriginal.trim() === "Entrar") {
+          await loginUsuario(email, senha);
         } else {
-          cadastrarUsuario(email, senha, nome);
+          await cadastrarUsuario(email, senha, nome);
         }
+      } catch (_error) {
+        btnEntrar.disabled = false;
+        btnEntrar.textContent = labelOriginal;
       }
     });
   }
+
+  btnGoogle?.addEventListener("click", async () => {
+    const labelOriginal = btnGoogle.innerHTML;
+    btnGoogle.disabled = true;
+    btnGoogle.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
+
+    try {
+      await loginComGoogle();
+    } catch (_error) {
+      btnGoogle.disabled = false;
+      btnGoogle.innerHTML = labelOriginal;
+    }
+  });
 });
 
 function alternarModo() {
