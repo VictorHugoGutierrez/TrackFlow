@@ -19,8 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const btnEntrar = document.getElementById("btnEntrar");
       if (!btnEntrar) return;
 
-      const nome = document.getElementById("input-nome").value ?? "";
-      const email = document.getElementById("input-email").value ?? "";
+      const nome = document.getElementById("input-nome").value?.trim() ?? "";
+      const email = document.getElementById("input-email").value?.trim() ?? "";
       const senha = document.getElementById("input-senha").value ?? "";
       const labelOriginal = btnEntrar.textContent;
 
@@ -67,7 +67,7 @@ function alternarModo() {
 
   if (modoLogin) {
     tituloForm.textContent = "Criar Conta";
-    campoNome.style.display = "block";
+    campoNome.classList.remove("d-none");
     btnEntrar.textContent = "Cadastrar";
     labelModo.textContent = "Já tem conta?";
     linkAlternar.textContent = "Fazer Login";
@@ -75,7 +75,7 @@ function alternarModo() {
     if (btnEsqueci) btnEsqueci.parentElement.style.display = "none";
   } else {
     tituloForm.textContent = "Entrar";
-    campoNome.style.display = "none";
+    campoNome.classList.add("d-none");
     btnEntrar.textContent = "Entrar";
     labelModo.textContent = "Não tem conta?";
     linkAlternar.textContent = "Criar Conta";

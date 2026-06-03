@@ -6,6 +6,7 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
+  updateProfile,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 import {
   doc,
@@ -52,7 +53,7 @@ async function ensureUserProfile(user, details = {}) {
   await setDoc(
     userRef,
     {
-      nome: details.nome || user.displayName || user.email || "Usuário",
+      nome: (details.nome || user.displayName || user.email || "Usuário").trim(),
       email: user.email ?? null,
       photo_url: user.photoURL ?? null,
       email_verified: Boolean(user.emailVerified),
@@ -111,13 +112,20 @@ export async function processGoogleRedirectResult() {
 }
 
 export async function cadastrarUsuario(email, senha, nome) {
+  const normalizedNome = nome?.trim() || "";
+
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
       senha,
     );
-    await ensureUserProfile(userCredential.user, { nome });
+
+    if (normalizedNome) {
+      await updateProfile(userCredential.user, { displayName: normalizedNome });
+    }
+
+    await ensureUserProfile(userCredential.user, { nome: normalizedNome });
     window.location.href = "app.html";
   } catch (error) {
     console.error("Erro no cadastro:", error);
