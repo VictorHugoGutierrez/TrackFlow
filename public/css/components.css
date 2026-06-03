@@ -1287,7 +1287,7 @@ body.page-app button[type="submit"]:hover {
 .settings-subtitle {
   color: var(--text-sub);
   font-size: 0.875rem;
-  margin-top: -0.75rem;
+  margin-top: 0.1rem;
 }
 
 .fw-500 {
