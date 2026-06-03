@@ -26,6 +26,53 @@
 }
 
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.back-home-button {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background: transparent;
+  color: var(--text-sub);
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+  z-index: 60;
+}
+.back-home-button:hover,
+.back-home-button:focus {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-main);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+}
+.back-home-button:focus {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16);
+}
+.back-home-button i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+
 .btn-primario {
   background-color: var(--play-color);
   color: #fff;
