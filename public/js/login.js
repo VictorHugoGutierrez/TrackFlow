@@ -1,6 +1,15 @@
 import { cadastrarUsuario, loginUsuario, loginComGoogle, processGoogleRedirectResult } from "./auth.js";
 import { showToast } from "./modules/ui.js";
 
+function isValidEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function isValidPassword(senha) {
+  return senha.length >= 6;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   processGoogleRedirectResult();
   const linkAlternar = document.getElementById("link-alternar-modo");
@@ -26,7 +35,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const labelOriginal = btnEntrar.textContent;
       const isCadastro = labelOriginal.trim() !== "Entrar";
 
-      // Validar nome em modo cadastro
+      if (!email) {
+        showToast("Email é obrigatório.", "error");
+        return;
+      }
+      if (!isValidEmail(email)) {
+        showToast("Informe um email válido.", "error");
+        return;
+      }
+
+      if (!senha) {
+        showToast("Senha é obrigatória.", "error");
+        return;
+      }
+      if (!isValidPassword(senha)) {
+        showToast("A senha deve ter no mínimo 6 caracteres.", "error");
+        return;
+      }
+
       if (isCadastro && !nome) {
         showToast("O nome é obrigatório para criar uma conta.", "error");
         return;

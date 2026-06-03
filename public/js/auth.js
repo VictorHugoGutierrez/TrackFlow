@@ -113,16 +113,37 @@ export async function processGoogleRedirectResult() {
 
 export async function cadastrarUsuario(email, senha, nome) {
   const normalizedNome = nome?.trim() || "";
+  const normalizedEmail = email?.trim() || "";
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Validação: nome não pode ser vazio
+  if (!normalizedEmail) {
+    throw new Error("Email é obrigatório.");
+  }
+
+  if (!emailRegex.test(normalizedEmail)) {
+    throw new Error("Email inválido.");
+  }
+
+  if (!senha || senha.length < 6) {
+    throw new Error("Senha deve ter no mínimo 6 caracteres.");
+  }
+
   if (!normalizedNome) {
     throw new Error("O nome é obrigatório para criar uma conta.");
+  }
+
+  if (normalizedNome.length < 2) {
+    throw new Error("O nome deve ter no mínimo 2 caracteres.");
+  }
+
+  if (normalizedNome.length > 100) {
+    throw new Error("O nome não pode exceder 100 caracteres.");
   }
 
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
-      email,
+      normalizedEmail,
       senha,
     );
 

@@ -23,6 +23,32 @@ let _unsubInvoices = null;
 let _settingsCache = { taxa_horaria_padrao: 0 };
 let _faturaEmailPendente = null;
 
+function isValidEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function isValidEmailOptional(email) {
+  if (!email || email.trim() === "") return true;
+  return isValidEmail(email);
+}
+
+function isValidPassword(senha) {
+  return senha.length >= 6;
+}
+
+function isValidNumber(value) {
+  return !isNaN(value) && value !== "";
+}
+
+function isValidPositiveNumber(value) {
+  return isValidNumber(value) && parseFloat(value) >= 0;
+}
+
+function sanitizeText(text) {
+  return text.trim();
+}
+
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -939,6 +965,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const nome = document.getElementById("new-cli-nome").value.trim();
       const contato =
         document.getElementById("new-cli-contato").value.trim() || null;
+
+      if (!nome || nome.length < 2) {
+        showToast("O nome do cliente deve ter no mínimo 2 caracteres.", "error");
+        return;
+      }
+
+      if (contato && !isValidEmailOptional(contato)) {
+        showToast("Email de contato inválido.", "error");
+        return;
+      }
+
       try {
         await clientService.create(nome, contato);
         e.target.reset();
@@ -959,6 +996,32 @@ document.addEventListener("DOMContentLoaded", () => {
       const cliId = document.getElementById("new-proj-cliente").value || null;
       const horas = document.getElementById("new-proj-horas").value || null;
       const taxa = document.getElementById("new-proj-taxa").value || null;
+
+      if (!nome || nome.length < 2) {
+        showToast("O nome do projeto deve ter no mínimo 2 caracteres.", "error");
+        return;
+      }
+
+      if (horas && isNaN(horas)) {
+        showToast("Orçamento de horas deve ser um número válido.", "error");
+        return;
+      }
+
+      if (horas && parseFloat(horas) < 0) {
+        showToast("Orçamento de horas não pode ser negativo.", "error");
+        return;
+      }
+
+      if (taxa && isNaN(taxa)) {
+        showToast("Taxa horária deve ser um número válido.", "error");
+        return;
+      }
+
+      if (taxa && parseFloat(taxa) < 0) {
+        showToast("Taxa horária não pode ser negativa.", "error");
+        return;
+      }
+
       try {
         await projectService.create(nome, cliId, horas, taxa);
         e.target.reset();
@@ -979,6 +1042,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const nome = document.getElementById("edit-cli-nome").value.trim();
       const contato =
         document.getElementById("edit-cli-contato").value.trim() || null;
+
+      if (!nome || nome.length < 2) {
+        showToast("O nome do cliente deve ter no mínimo 2 caracteres.", "error");
+        return;
+      }
+
+      if (contato && !isValidEmailOptional(contato)) {
+        showToast("Email de contato inválido.", "error");
+        return;
+      }
+
       try {
         await clientService.update(id, { nome, contato });
         window.fecharModal("modal-editar-cliente");
@@ -1003,6 +1077,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const taxa_horaria =
         document.getElementById("edit-proj-taxa").value || null;
       const status = document.getElementById("edit-proj-status").value;
+
+      if (!nome || nome.length < 2) {
+        showToast("O nome do projeto deve ter no mínimo 2 caracteres.", "error");
+        return;
+      }
+
+      if (orcamento_horas && !isValidPositiveNumber(orcamento_horas)) {
+        showToast("Orçamento de horas deve ser um número não-negativo.", "error");
+        return;
+      }
+
+      if (taxa_horaria && !isValidPositiveNumber(taxa_horaria)) {
+        showToast("Taxa horária deve ser um número não-negativo.", "error");
+        return;
+      }
+
       try {
         await projectService.update(id, {
           nome,
@@ -1026,6 +1116,17 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const projectId = document.getElementById("new-tar-projeto").value || null;
       const titulo = document.getElementById("new-tar-titulo").value.trim();
+
+      if (!titulo || titulo.length < 2) {
+        showToast("O título da tarefa deve ter no mínimo 2 caracteres.", "error");
+        return;
+      }
+
+      if (titulo.length > 255) {
+        showToast("O título da tarefa não pode exceder 255 caracteres.", "error");
+        return;
+      }
+
       try {
         await taskService.create(projectId, titulo);
         e.target.reset();
@@ -1045,6 +1146,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const titulo = document.getElementById("edit-tar-titulo").value.trim();
       const project_id =
         document.getElementById("edit-tar-projeto").value || null;
+
+      if (!titulo || titulo.length < 2) {
+        showToast("O título da tarefa deve ter no mínimo 2 caracteres.", "error");
+        return;
+      }
+
+      if (titulo.length > 255) {
+        showToast("O título da tarefa não pode exceder 255 caracteres.", "error");
+        return;
+      }
+
       try {
         await taskService.update(id, { titulo, project_id });
         window.fecharModal("modal-editar-tarefa");
@@ -1063,6 +1175,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const description = document.getElementById("edit-te-desc").value.trim();
       const client_id = document.getElementById("edit-te-cliente").value || null;
       const project_id = document.getElementById("edit-te-projeto").value || null;
+
+      if (description && description.length > 500) {
+        showToast("A descrição não pode exceder 500 caracteres.", "error");
+        return;
+      }
 
       try {
         await timeEntryService.update(id, { description, client_id, project_id });
@@ -1083,6 +1200,33 @@ document.addEventListener("DOMContentLoaded", () => {
       const tema = document.getElementById("config-tema").value || "dark";
       const pomodoro_foco = parseInt(document.getElementById("config-pomodoro-foco").value) || 25;
       const pomodoro_pausa = parseInt(document.getElementById("config-pomodoro-pausa").value) || 5;
+
+      if (taxa < 0) {
+        showToast("Taxa horária padrão não pode ser negativa.", "error");
+        return;
+      }
+
+      const moedasValidas = ["BRL", "USD", "EUR"];
+      if (!moedasValidas.includes(moeda)) {
+        showToast("Moeda inválida. Use BRL, USD ou EUR.", "error");
+        return;
+      }
+
+      const temasValidos = ["dark", "light"];
+      if (!temasValidos.includes(tema)) {
+        showToast("Tema inválido. Use dark ou light.", "error");
+        return;
+      }
+
+      if (pomodoro_foco < 1 || pomodoro_foco > 120) {
+        showToast("Tempo de foco Pomodoro deve ser entre 1 e 120 minutos.", "error");
+        return;
+      }
+
+      if (pomodoro_pausa < 1 || pomodoro_pausa > 60) {
+        showToast("Tempo de pausa Pomodoro deve ser entre 1 e 60 minutos.", "error");
+        return;
+      }
 
       try {
         await settingsService.update({ 
@@ -1125,6 +1269,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btn-email-sim")?.addEventListener("click", async () => {
     if (!_faturaEmailPendente) return;
+
+    if (!_faturaEmailPendente.email_to || !isValidEmail(_faturaEmailPendente.email_to)) {
+      showToast("Email de destino inválido ou não informado.", "error");
+      return;
+    }
 
     const feedback = document.getElementById("email-invoice-feedback");
     const btnSim = document.getElementById("btn-email-sim");
