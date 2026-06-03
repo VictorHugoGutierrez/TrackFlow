@@ -137,10 +137,11 @@ onAuthStateChanged(auth, (user) => {
 
 window.switchPage = (pageId, tabId = null) => {
   document.querySelectorAll(".page-content").forEach((page) => {
-    page.style.display = "none";
+    page.classList.add("d-none");
+    page.style.removeProperty("display");
   });
   const target = document.getElementById(pageId);
-  if (target) target.style.display = "block";
+  if (target) target.classList.remove("d-none");
 
   
   if (pageId === "page-gestao" && tabId) {
@@ -166,10 +167,11 @@ window.switchPage = (pageId, tabId = null) => {
 
 window.switchTab = (tabId, btnEl) => {
   document.querySelectorAll(".tab-content").forEach((tab) => {
-    tab.style.display = "none";
+    tab.classList.add("d-none");
+    tab.style.removeProperty("display");
   });
   const target = document.getElementById(tabId);
-  if (target) target.style.display = "block";
+  if (target) target.classList.remove("d-none");
 
   document
     .querySelectorAll(".tab-link")
