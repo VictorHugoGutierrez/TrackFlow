@@ -1,4 +1,5 @@
 import { cadastrarUsuario, loginUsuario, loginComGoogle, processGoogleRedirectResult } from "./auth.js";
+import { showToast } from "./modules/ui.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   processGoogleRedirectResult();
@@ -23,6 +24,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const email = document.getElementById("input-email").value?.trim() ?? "";
       const senha = document.getElementById("input-senha").value ?? "";
       const labelOriginal = btnEntrar.textContent;
+      const isCadastro = labelOriginal.trim() !== "Entrar";
+
+      // Validar nome em modo cadastro
+      if (isCadastro && !nome) {
+        showToast("O nome é obrigatório para criar uma conta.", "error");
+        return;
+      }
 
       btnEntrar.disabled = true;
       btnEntrar.textContent =

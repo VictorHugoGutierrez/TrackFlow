@@ -114,6 +114,11 @@ export async function processGoogleRedirectResult() {
 export async function cadastrarUsuario(email, senha, nome) {
   const normalizedNome = nome?.trim() || "";
 
+  // Validação: nome não pode ser vazio
+  if (!normalizedNome) {
+    throw new Error("O nome é obrigatório para criar uma conta.");
+  }
+
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
