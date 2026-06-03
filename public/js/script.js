@@ -22,7 +22,7 @@ function applyTheme(theme) {
 
 const savedTheme = localStorage.getItem("trackflow-theme");
 const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-const initialTheme = savedTheme || (systemDark ? "dark" : "dark");
+const initialTheme = savedTheme || (systemDark ? "dark" : "light");
 applyTheme(initialTheme);
 
 themeToggle.addEventListener("click", () => {
