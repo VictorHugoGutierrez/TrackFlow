@@ -14,12 +14,20 @@ import {
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { showToast } from "./modules/ui.js";
+import {
+  createValidationError,
+  validateLoginInput,
+  validateSignupInput,
+} from "./modules/validators.js";
 
 const DEFAULT_SETTINGS = {
   taxa_horaria_padrao: 0,
   moeda: "BRL",
+  tema: "dark",
   tema_interface: "dark",
   pomodoro: { trabalho: 25, pausa: 5 },
+  pomodoro_foco: 25,
+  pomodoro_pausa: 5,
 };
 
 function nowIso() {
@@ -112,39 +120,24 @@ export async function processGoogleRedirectResult() {
 }
 
 export async function cadastrarUsuario(email, senha, nome) {
-  const normalizedNome = nome?.trim() || "";
-  const normalizedEmail = email?.trim() || "";
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validation = validateSignupInput({ email, password: senha, name: nome });
 
-  if (!normalizedEmail) {
-    throw new Error("Email é obrigatório.");
+  if (validation.error) {
+    showToast(validation.error, "error");
+    throw createValidationError(validation.error);
   }
 
-  if (!emailRegex.test(normalizedEmail)) {
-    throw new Error("Email inválido.");
-  }
-
-  if (!senha || senha.length < 6) {
-    throw new Error("Senha deve ter no mínimo 6 caracteres.");
-  }
-
-  if (!normalizedNome) {
-    throw new Error("O nome é obrigatório para criar uma conta.");
-  }
-
-  if (normalizedNome.length < 2) {
-    throw new Error("O nome deve ter no mínimo 2 caracteres.");
-  }
-
-  if (normalizedNome.length > 100) {
-    throw new Error("O nome não pode exceder 100 caracteres.");
-  }
+  const {
+    email: normalizedEmail,
+    password,
+    name: normalizedNome,
+  } = validation.values;
 
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       normalizedEmail,
-      senha,
+      password,
     );
 
     if (normalizedNome) {
@@ -161,8 +154,21 @@ export async function cadastrarUsuario(email, senha, nome) {
 }
 
 export async function loginUsuario(email, senha) {
+  const validation = validateLoginInput({ email, password: senha });
+
+  if (validation.error) {
+    showToast(validation.error, "error");
+    throw createValidationError(validation.error);
+  }
+
+  const { email: normalizedEmail, password } = validation.values;
+
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      normalizedEmail,
+      password,
+    );
     await ensureUserProfile(userCredential.user);
     window.location.href = "app.html";
   } catch (error) {

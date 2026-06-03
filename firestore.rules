@@ -36,6 +36,13 @@ service cloud.firestore {
         || request.resource.data[field] is number;
     }
 
+    function isOptionalNonNegativeNumber(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || (request.resource.data[field] is number
+          && request.resource.data[field] >= 0);
+    }
+
     function isOptionalBool(field) {
       return !(field in request.resource.data)
         || request.resource.data[field] == null
@@ -67,7 +74,7 @@ service cloud.firestore {
         ])
         && ownsIncomingData()
         && request.resource.data.nome is string
-        && request.resource.data.nome.size() > 0
+        && request.resource.data.nome.size() >= 2
         && request.resource.data.nome.size() <= 160
         && isValidEmailString("contato")
         && request.resource.data.ativo is bool
@@ -81,11 +88,11 @@ service cloud.firestore {
         ])
         && ownsIncomingData()
         && request.resource.data.nome is string
-        && request.resource.data.nome.size() > 0
+        && request.resource.data.nome.size() >= 2
         && request.resource.data.nome.size() <= 180
         && isOptionalString("client_id")
-        && isOptionalNumber("orcamento_horas")
-        && isOptionalNumber("taxa_horaria")
+        && isOptionalNonNegativeNumber("orcamento_horas")
+        && isOptionalNonNegativeNumber("taxa_horaria")
         && request.resource.data.status in [
           "em_andamento", "concluido", "pausado"
         ]
@@ -99,7 +106,7 @@ service cloud.firestore {
         ])
         && ownsIncomingData()
         && request.resource.data.titulo is string
-        && request.resource.data.titulo.size() > 0
+        && request.resource.data.titulo.size() >= 2
         && request.resource.data.titulo.size() <= 200
         && isOptionalString("project_id")
         && request.resource.data.status in ["todo", "doing", "done"]
@@ -131,8 +138,7 @@ service cloud.firestore {
         ])
         && request.resource.data.taxa_horaria_padrao is number
         && request.resource.data.taxa_horaria_padrao >= 0
-        && request.resource.data.moeda is string
-        && request.resource.data.moeda.size() == 3
+        && request.resource.data.moeda in ["BRL", "USD", "EUR"]
         && (!("tema_interface" in request.resource.data)
           || request.resource.data.tema_interface in ["dark", "light"])
         && (!("tema" in request.resource.data)
@@ -141,10 +147,12 @@ service cloud.firestore {
           || request.resource.data.pomodoro is map)
         && (!("pomodoro_foco" in request.resource.data)
           || (request.resource.data.pomodoro_foco is number
-            && request.resource.data.pomodoro_foco > 0))
+            && request.resource.data.pomodoro_foco >= 1
+            && request.resource.data.pomodoro_foco <= 120))
         && (!("pomodoro_pausa" in request.resource.data)
           || (request.resource.data.pomodoro_pausa is number
-            && request.resource.data.pomodoro_pausa > 0))
+            && request.resource.data.pomodoro_pausa >= 1
+            && request.resource.data.pomodoro_pausa <= 60))
         && isOptionalString("atualizado_em");
     }
 
@@ -169,10 +177,9 @@ service cloud.firestore {
         ]
         && request.resource.data.valor_total is number
         && request.resource.data.valor_total >= 0
-        && isOptionalNumber("total_horas")
+        && isOptionalNonNegativeNumber("total_horas")
         && isOptionalString("mes_referencia")
-        && request.resource.data.moeda is string
-        && request.resource.data.moeda.size() == 3
+        && request.resource.data.moeda in ["BRL", "USD", "EUR"]
         && request.resource.data.emitida_em is string
         && isOptionalString("vencimento_em")
         && isOptionalString("paga_em")

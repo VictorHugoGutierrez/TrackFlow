@@ -794,6 +794,7 @@
               <form
                 id="form-configuracoes"
                 class="config-form"
+                novalidate
               >
                 <div class="form-group">
                   <label for="config-taxa-padrao"
@@ -805,7 +806,6 @@
                     placeholder="Ex: 85.00"
                     step="0.01"
                     min="0"
-                    required
                   />
                 </div>
                 <div class="form-group">
@@ -826,11 +826,11 @@
                 <div class="form-group" class="config-row">
                   <div class="config-col">
                     <label for="config-pomodoro-foco">Tempo de Foco (min)</label>
-                    <input type="number" id="config-pomodoro-foco" value="25" min="1" required />
+                    <input type="number" id="config-pomodoro-foco" value="25" min="1" max="120" />
                   </div>
                   <div class="config-col">
                     <label for="config-pomodoro-pausa">Tempo de Pausa (min)</label>
-                    <input type="number" id="config-pomodoro-pausa" value="5" min="1" required />
+                    <input type="number" id="config-pomodoro-pausa" value="5" min="1" max="60" />
                   </div>
                 </div>
                 <button
@@ -871,7 +871,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-editar-cliente">
+        <form id="form-editar-cliente" novalidate>
           <input type="hidden" id="edit-cli-id" />
           <div class="form-group">
             <label for="edit-cli-nome">Nome</label>
@@ -879,6 +879,8 @@
               type="text"
               id="edit-cli-nome"
               placeholder="Nome da Empresa/Cliente"
+              minlength="2"
+              maxlength="160"
               required
             />
           </div>
@@ -916,7 +918,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-editar-projeto">
+        <form id="form-editar-projeto" novalidate>
           <input type="hidden" id="edit-proj-id" />
           <div class="form-group">
             <label for="edit-proj-nome">Nome do Projeto</label>
@@ -924,6 +926,8 @@
               type="text"
               id="edit-proj-nome"
               placeholder="Nome do Projeto"
+              minlength="2"
+              maxlength="180"
               required
             />
           </div>
@@ -987,7 +991,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-editar-tarefa">
+        <form id="form-editar-tarefa" novalidate>
           <input type="hidden" id="edit-tar-id" />
           <div class="form-group">
             <label for="edit-tar-titulo">Título da Tarefa</label>
@@ -995,6 +999,8 @@
               type="text"
               id="edit-tar-titulo"
               placeholder="Título da Tarefa"
+              minlength="2"
+              maxlength="200"
               required
             />
           </div>
@@ -1041,13 +1047,15 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-novo-cliente">
+        <form id="form-novo-cliente" novalidate>
           <div class="form-group">
             <label for="new-cli-nome">Nome da Empresa/Cliente</label>
             <input
               type="text"
               id="new-cli-nome"
               placeholder="Ex: ACME Corporation"
+              minlength="2"
+              maxlength="160"
               required
             />
           </div>
@@ -1057,7 +1065,6 @@
               type="email"
               id="new-cli-contato"
               placeholder="Ex: contato@acme.com"
-              required
             />
           </div>
           <div class="modal-footer">
@@ -1087,13 +1094,15 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-novo-projeto">
+        <form id="form-novo-projeto" novalidate>
           <div class="form-group">
             <label for="new-proj-nome">Nome do Projeto</label>
             <input
               type="text"
               id="new-proj-nome"
               placeholder="Ex: Website Institucional"
+              minlength="2"
+              maxlength="180"
               required
             />
           </div>
@@ -1150,10 +1159,10 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-nova-tarefa">
+        <form id="form-nova-tarefa" novalidate>
           <div class="form-group">
             <label for="new-tar-projeto">Projeto</label>
-            <select id="new-tar-projeto" required>
+            <select id="new-tar-projeto">
               <option value="">Selecione um Projeto</option>
             </select>
           </div>
@@ -1163,6 +1172,8 @@
               type="text"
               id="new-tar-titulo"
               placeholder="Ex: Modelagem de Banco de Dados"
+              minlength="2"
+              maxlength="200"
               required
             />
           </div>
@@ -1193,7 +1204,7 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <form id="form-editar-time-entry">
+        <form id="form-editar-time-entry" novalidate>
           <input type="hidden" id="edit-te-id" />
           <div class="form-group">
             <label for="edit-te-desc">Descrição</label>
@@ -1201,7 +1212,7 @@
               type="text"
               id="edit-te-desc"
               placeholder="Descrição da Tarefa"
-              required
+              maxlength="500"
             />
           </div>
           <div class="form-group">

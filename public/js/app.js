@@ -14,6 +14,18 @@ import { initTimer, carregarDropdownsTimer } from "./modules/timer.js";
 import { initPomodoro, updatePomodoroSettings } from "./modules/pomodoro.js";
 import { initRelatorios, refreshRelatorios } from "./modules/reports.js";
 import { showToast, showConfirm } from "./modules/ui.js";
+import {
+  VALID_CURRENCIES,
+  VALID_THEMES,
+  VALIDATION_LIMITS,
+  getFirstValidationError,
+  validateAllowedValue,
+  validateEmail,
+  validateIntegerInRange,
+  validateOptionalNonNegativeNumber,
+  validateOptionalText,
+  validateRequiredText,
+} from "./modules/validators.js";
 
 let _clientesCache = [];
 let _projetosCache = [];
@@ -23,30 +35,11 @@ let _unsubInvoices = null;
 let _settingsCache = { taxa_horaria_padrao: 0 };
 let _faturaEmailPendente = null;
 
-function isValidEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
-function isValidEmailOptional(email) {
-  if (!email || email.trim() === "") return true;
-  return isValidEmail(email);
-}
-
-function isValidPassword(senha) {
-  return senha.length >= 6;
-}
-
-function isValidNumber(value) {
-  return !isNaN(value) && value !== "";
-}
-
-function isValidPositiveNumber(value) {
-  return isValidNumber(value) && parseFloat(value) >= 0;
-}
-
-function sanitizeText(text) {
-  return text.trim();
+function showValidationError(...validations) {
+  const error = getFirstValidationError(...validations);
+  if (!error) return false;
+  showToast(error, "error");
+  return true;
 }
 
 
@@ -962,22 +955,28 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("form-novo-cliente")
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const nome = document.getElementById("new-cli-nome").value.trim();
-      const contato =
-        document.getElementById("new-cli-contato").value.trim() || null;
+      const nomeValidation = validateRequiredText(
+        document.getElementById("new-cli-nome").value,
+        {
+          fieldName: "Nome do cliente",
+          min: VALIDATION_LIMITS.clientNameMin,
+          max: VALIDATION_LIMITS.clientNameMax,
+        },
+      );
+      const contatoValidation = validateEmail(
+        document.getElementById("new-cli-contato").value,
+        { required: false, label: "E-mail de contato" },
+      );
 
-      if (!nome || nome.length < 2) {
-        showToast("O nome do cliente deve ter no mínimo 2 caracteres.", "error");
-        return;
-      }
-
-      if (contato && !isValidEmailOptional(contato)) {
-        showToast("Email de contato inválido.", "error");
+      if (showValidationError(nomeValidation, contatoValidation)) {
         return;
       }
 
       try {
-        await clientService.create(nome, contato);
+        await clientService.create(
+          nomeValidation.value,
+          contatoValidation.value || null,
+        );
         e.target.reset();
         window.fecharModal("modal-novo-cliente");
         await renderizarListas();
@@ -992,38 +991,35 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("form-novo-projeto")
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const nome = document.getElementById("new-proj-nome").value.trim();
       const cliId = document.getElementById("new-proj-cliente").value || null;
-      const horas = document.getElementById("new-proj-horas").value || null;
-      const taxa = document.getElementById("new-proj-taxa").value || null;
+      const nomeValidation = validateRequiredText(
+        document.getElementById("new-proj-nome").value,
+        {
+          fieldName: "Nome do projeto",
+          min: VALIDATION_LIMITS.projectNameMin,
+          max: VALIDATION_LIMITS.projectNameMax,
+        },
+      );
+      const horasValidation = validateOptionalNonNegativeNumber(
+        document.getElementById("new-proj-horas").value,
+        "Orçamento de horas",
+      );
+      const taxaValidation = validateOptionalNonNegativeNumber(
+        document.getElementById("new-proj-taxa").value,
+        "Taxa horária",
+      );
 
-      if (!nome || nome.length < 2) {
-        showToast("O nome do projeto deve ter no mínimo 2 caracteres.", "error");
-        return;
-      }
-
-      if (horas && isNaN(horas)) {
-        showToast("Orçamento de horas deve ser um número válido.", "error");
-        return;
-      }
-
-      if (horas && parseFloat(horas) < 0) {
-        showToast("Orçamento de horas não pode ser negativo.", "error");
-        return;
-      }
-
-      if (taxa && isNaN(taxa)) {
-        showToast("Taxa horária deve ser um número válido.", "error");
-        return;
-      }
-
-      if (taxa && parseFloat(taxa) < 0) {
-        showToast("Taxa horária não pode ser negativa.", "error");
+      if (showValidationError(nomeValidation, horasValidation, taxaValidation)) {
         return;
       }
 
       try {
-        await projectService.create(nome, cliId, horas, taxa);
+        await projectService.create(
+          nomeValidation.value,
+          cliId,
+          horasValidation.value,
+          taxaValidation.value,
+        );
         e.target.reset();
         window.fecharModal("modal-novo-projeto");
         await renderizarListas();
@@ -1039,22 +1035,28 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("edit-cli-id").value;
-      const nome = document.getElementById("edit-cli-nome").value.trim();
-      const contato =
-        document.getElementById("edit-cli-contato").value.trim() || null;
+      const nomeValidation = validateRequiredText(
+        document.getElementById("edit-cli-nome").value,
+        {
+          fieldName: "Nome do cliente",
+          min: VALIDATION_LIMITS.clientNameMin,
+          max: VALIDATION_LIMITS.clientNameMax,
+        },
+      );
+      const contatoValidation = validateEmail(
+        document.getElementById("edit-cli-contato").value,
+        { required: false, label: "E-mail de contato" },
+      );
 
-      if (!nome || nome.length < 2) {
-        showToast("O nome do cliente deve ter no mínimo 2 caracteres.", "error");
-        return;
-      }
-
-      if (contato && !isValidEmailOptional(contato)) {
-        showToast("Email de contato inválido.", "error");
+      if (showValidationError(nomeValidation, contatoValidation)) {
         return;
       }
 
       try {
-        await clientService.update(id, { nome, contato });
+        await clientService.update(id, {
+          nome: nomeValidation.value,
+          contato: contatoValidation.value || null,
+        });
         window.fecharModal("modal-editar-cliente");
         await renderizarListas();
         showToast("Cliente atualizado com sucesso!", "success");
@@ -1069,36 +1071,36 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("edit-proj-id").value;
-      const nome = document.getElementById("edit-proj-nome").value.trim();
       const client_id =
         document.getElementById("edit-proj-cliente").value || null;
-      const orcamento_horas =
-        document.getElementById("edit-proj-horas").value || null;
-      const taxa_horaria =
-        document.getElementById("edit-proj-taxa").value || null;
       const status = document.getElementById("edit-proj-status").value;
+      const nomeValidation = validateRequiredText(
+        document.getElementById("edit-proj-nome").value,
+        {
+          fieldName: "Nome do projeto",
+          min: VALIDATION_LIMITS.projectNameMin,
+          max: VALIDATION_LIMITS.projectNameMax,
+        },
+      );
+      const horasValidation = validateOptionalNonNegativeNumber(
+        document.getElementById("edit-proj-horas").value,
+        "Orçamento de horas",
+      );
+      const taxaValidation = validateOptionalNonNegativeNumber(
+        document.getElementById("edit-proj-taxa").value,
+        "Taxa horária",
+      );
 
-      if (!nome || nome.length < 2) {
-        showToast("O nome do projeto deve ter no mínimo 2 caracteres.", "error");
-        return;
-      }
-
-      if (orcamento_horas && !isValidPositiveNumber(orcamento_horas)) {
-        showToast("Orçamento de horas deve ser um número não-negativo.", "error");
-        return;
-      }
-
-      if (taxa_horaria && !isValidPositiveNumber(taxa_horaria)) {
-        showToast("Taxa horária deve ser um número não-negativo.", "error");
+      if (showValidationError(nomeValidation, horasValidation, taxaValidation)) {
         return;
       }
 
       try {
         await projectService.update(id, {
-          nome,
+          nome: nomeValidation.value,
           client_id,
-          orcamento_horas,
-          taxa_horaria,
+          orcamento_horas: horasValidation.value,
+          taxa_horaria: taxaValidation.value,
           status,
         });
         window.fecharModal("modal-editar-projeto");
@@ -1115,20 +1117,21 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const projectId = document.getElementById("new-tar-projeto").value || null;
-      const titulo = document.getElementById("new-tar-titulo").value.trim();
+      const tituloValidation = validateRequiredText(
+        document.getElementById("new-tar-titulo").value,
+        {
+          fieldName: "Título da tarefa",
+          min: VALIDATION_LIMITS.taskTitleMin,
+          max: VALIDATION_LIMITS.taskTitleMax,
+        },
+      );
 
-      if (!titulo || titulo.length < 2) {
-        showToast("O título da tarefa deve ter no mínimo 2 caracteres.", "error");
-        return;
-      }
-
-      if (titulo.length > 255) {
-        showToast("O título da tarefa não pode exceder 255 caracteres.", "error");
+      if (showValidationError(tituloValidation)) {
         return;
       }
 
       try {
-        await taskService.create(projectId, titulo);
+        await taskService.create(projectId, tituloValidation.value);
         e.target.reset();
         window.fecharModal("modal-nova-tarefa");
         showToast("Tarefa criada com sucesso!", "success");
@@ -1143,22 +1146,26 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("edit-tar-id").value;
-      const titulo = document.getElementById("edit-tar-titulo").value.trim();
       const project_id =
         document.getElementById("edit-tar-projeto").value || null;
+      const tituloValidation = validateRequiredText(
+        document.getElementById("edit-tar-titulo").value,
+        {
+          fieldName: "Título da tarefa",
+          min: VALIDATION_LIMITS.taskTitleMin,
+          max: VALIDATION_LIMITS.taskTitleMax,
+        },
+      );
 
-      if (!titulo || titulo.length < 2) {
-        showToast("O título da tarefa deve ter no mínimo 2 caracteres.", "error");
-        return;
-      }
-
-      if (titulo.length > 255) {
-        showToast("O título da tarefa não pode exceder 255 caracteres.", "error");
+      if (showValidationError(tituloValidation)) {
         return;
       }
 
       try {
-        await taskService.update(id, { titulo, project_id });
+        await taskService.update(id, {
+          titulo: tituloValidation.value,
+          project_id,
+        });
         window.fecharModal("modal-editar-tarefa");
         showToast("Tarefa atualizada com sucesso!", "success");
       } catch (error) {
@@ -1172,17 +1179,26 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = document.getElementById("edit-te-id").value;
-      const description = document.getElementById("edit-te-desc").value.trim();
       const client_id = document.getElementById("edit-te-cliente").value || null;
       const project_id = document.getElementById("edit-te-projeto").value || null;
+      const descriptionValidation = validateOptionalText(
+        document.getElementById("edit-te-desc").value,
+        {
+          fieldName: "A descrição",
+          max: VALIDATION_LIMITS.timeEntryDescriptionMax,
+        },
+      );
 
-      if (description && description.length > 500) {
-        showToast("A descrição não pode exceder 500 caracteres.", "error");
+      if (showValidationError(descriptionValidation)) {
         return;
       }
 
       try {
-        await timeEntryService.update(id, { description, client_id, project_id });
+        await timeEntryService.update(id, {
+          description: descriptionValidation.value,
+          client_id,
+          project_id,
+        });
         window.fecharModal("modal-editar-time-entry");
         showToast("Apontamento atualizado com sucesso!", "success");
       } catch (error) {
@@ -1195,38 +1211,54 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("form-configuracoes")
     ?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const taxa = parseFloat(document.getElementById("config-taxa-padrao").value) || 0;
-      const moeda = document.getElementById("config-moeda").value || "BRL";
-      const tema = document.getElementById("config-tema").value || "dark";
-      const pomodoro_foco = parseInt(document.getElementById("config-pomodoro-foco").value) || 25;
-      const pomodoro_pausa = parseInt(document.getElementById("config-pomodoro-pausa").value) || 5;
+      const taxaValidation = validateOptionalNonNegativeNumber(
+        document.getElementById("config-taxa-padrao").value,
+        "Taxa horária padrão",
+      );
+      const moedaValidation = validateAllowedValue(
+        document.getElementById("config-moeda").value,
+        { fieldName: "Valor da moeda", allowedValues: VALID_CURRENCIES },
+      );
+      const temaValidation = validateAllowedValue(
+        document.getElementById("config-tema").value,
+        { fieldName: "Tema", allowedValues: VALID_THEMES },
+      );
+      const focoValidation = validateIntegerInRange(
+        document.getElementById("config-pomodoro-foco").value,
+        {
+          fieldName: "Tempo de foco Pomodoro",
+          min: VALIDATION_LIMITS.pomodoroFocusMin,
+          max: VALIDATION_LIMITS.pomodoroFocusMax,
+          defaultValue: 25,
+        },
+      );
+      const pausaValidation = validateIntegerInRange(
+        document.getElementById("config-pomodoro-pausa").value,
+        {
+          fieldName: "Tempo de pausa Pomodoro",
+          min: VALIDATION_LIMITS.pomodoroPauseMin,
+          max: VALIDATION_LIMITS.pomodoroPauseMax,
+          defaultValue: 5,
+        },
+      );
 
-      if (taxa < 0) {
-        showToast("Taxa horária padrão não pode ser negativa.", "error");
+      if (
+        showValidationError(
+          taxaValidation,
+          moedaValidation,
+          temaValidation,
+          focoValidation,
+          pausaValidation,
+        )
+      ) {
         return;
       }
 
-      const moedasValidas = ["BRL", "USD", "EUR"];
-      if (!moedasValidas.includes(moeda)) {
-        showToast("Moeda inválida. Use BRL, USD ou EUR.", "error");
-        return;
-      }
-
-      const temasValidos = ["dark", "light"];
-      if (!temasValidos.includes(tema)) {
-        showToast("Tema inválido. Use dark ou light.", "error");
-        return;
-      }
-
-      if (pomodoro_foco < 1 || pomodoro_foco > 120) {
-        showToast("Tempo de foco Pomodoro deve ser entre 1 e 120 minutos.", "error");
-        return;
-      }
-
-      if (pomodoro_pausa < 1 || pomodoro_pausa > 60) {
-        showToast("Tempo de pausa Pomodoro deve ser entre 1 e 60 minutos.", "error");
-        return;
-      }
+      const taxa = taxaValidation.value ?? 0;
+      const moeda = moedaValidation.value;
+      const tema = temaValidation.value;
+      const pomodoro_foco = focoValidation.value;
+      const pomodoro_pausa = pausaValidation.value;
 
       try {
         await settingsService.update({ 
@@ -1270,8 +1302,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-email-sim")?.addEventListener("click", async () => {
     if (!_faturaEmailPendente) return;
 
-    if (!_faturaEmailPendente.email_to || !isValidEmail(_faturaEmailPendente.email_to)) {
-      showToast("Email de destino inválido ou não informado.", "error");
+    const emailValidation = validateEmail(_faturaEmailPendente.email_to, {
+      label: "E-mail de destino",
+    });
+
+    if (showValidationError(emailValidation)) {
       return;
     }
 

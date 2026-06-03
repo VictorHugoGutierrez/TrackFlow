@@ -1,14 +1,6 @@
 import { cadastrarUsuario, loginUsuario, loginComGoogle, processGoogleRedirectResult } from "./auth.js";
 import { showToast } from "./modules/ui.js";
-
-function isValidEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
-function isValidPassword(senha) {
-  return senha.length >= 6;
-}
+import { validateLoginInput, validateSignupInput } from "./modules/validators.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   processGoogleRedirectResult();
@@ -35,26 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const labelOriginal = btnEntrar.textContent;
       const isCadastro = labelOriginal.trim() !== "Entrar";
 
-      if (!email) {
-        showToast("Email é obrigatório.", "error");
-        return;
-      }
-      if (!isValidEmail(email)) {
-        showToast("Informe um email válido.", "error");
-        return;
-      }
+      const validation = isCadastro
+        ? validateSignupInput({ email, password: senha, name: nome })
+        : validateLoginInput({ email, password: senha });
 
-      if (!senha) {
-        showToast("Senha é obrigatória.", "error");
-        return;
-      }
-      if (!isValidPassword(senha)) {
-        showToast("A senha deve ter no mínimo 6 caracteres.", "error");
-        return;
-      }
-
-      if (isCadastro && !nome) {
-        showToast("O nome é obrigatório para criar uma conta.", "error");
+      if (validation.error) {
+        showToast(validation.error, "error");
         return;
       }
 
@@ -63,10 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
         labelOriginal.trim() === "Entrar" ? "Entrando..." : "Cadastrando...";
 
       try {
-        if (labelOriginal.trim() === "Entrar") {
-          await loginUsuario(email, senha);
+        if (!isCadastro) {
+          await loginUsuario(
+            validation.values.email,
+            validation.values.password,
+          );
         } else {
-          await cadastrarUsuario(email, senha, nome);
+          await cadastrarUsuario(
+            validation.values.email,
+            validation.values.password,
+            validation.values.name,
+          );
         }
       } catch (_error) {
         btnEntrar.disabled = false;
