@@ -3,6 +3,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 import {
@@ -10,6 +12,7 @@ import {
   getDoc,
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { showToast } from "./modules/ui.js";
 
 const DEFAULT_SETTINGS = {
   taxa_horaria_padrao: 0,
@@ -78,6 +81,13 @@ function authErrorMessage(error) {
     "auth/invalid-email": "Informe um e-mail válido.",
     "auth/popup-blocked": "O navegador bloqueou o popup do Google.",
     "auth/popup-closed-by-user": "Login com Google cancelado.",
+    "auth/cancelled-popup-request": "O login com Google foi cancelado. Tente novamente.",
+    "auth/operation-not-supported-in-this-environment":
+      "O navegador não suporta login por popup. Use outro navegador ou método.",
+    "auth/operation-not-allowed":
+      "Login com Google não está habilitado. Habilite o provedor Google no Firebase.",
+    "auth/unauthorized-domain":
+      "Domínio não autorizado. Adicione este domínio ao console do Firebase.",
     "auth/weak-password": "Use uma senha mais forte.",
     "auth/wrong-password": "E-mail ou senha incorretos.",
     "auth/user-not-found": "E-mail ou senha incorretos.",
@@ -85,6 +95,19 @@ function authErrorMessage(error) {
   };
 
   return messages[error.code] ?? "Não foi possível concluir a autenticação.";
+}
+
+export async function processGoogleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      await ensureUserProfile(result.user);
+      window.location.href = "app.html";
+    }
+  } catch (error) {
+    console.error("Erro no retorno do login Google:", error);
+    showToast(authErrorMessage(error), "error");
+  }
 }
 
 export async function cadastrarUsuario(email, senha, nome) {
@@ -98,7 +121,7 @@ export async function cadastrarUsuario(email, senha, nome) {
     window.location.href = "app.html";
   } catch (error) {
     console.error("Erro no cadastro:", error);
-    alert(authErrorMessage(error));
+    showToast(authErrorMessage(error), "error");
     throw error;
   }
 }
@@ -110,7 +133,7 @@ export async function loginUsuario(email, senha) {
     window.location.href = "app.html";
   } catch (error) {
     console.error("Erro no login:", error);
-    alert(authErrorMessage(error));
+    showToast(authErrorMessage(error), "error");
     throw error;
   }
 }
@@ -125,7 +148,20 @@ export async function loginComGoogle() {
     window.location.href = "app.html";
   } catch (error) {
     console.error("Erro no login com Google:", error);
-    alert(authErrorMessage(error));
+    const popupBlocked = error.code === "auth/popup-blocked";
+    const notSupported = error.code === "auth/operation-not-supported-in-this-environment";
+    const cancelled = error.code === "auth/cancelled-popup-request";
+
+    if (popupBlocked || notSupported || cancelled) {
+      showToast(
+        "Popup do Google bloqueado ou indisponível. Redirecionando para login...",
+        "info"
+      );
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+
+    showToast(authErrorMessage(error), "error");
     throw error;
   }
 }

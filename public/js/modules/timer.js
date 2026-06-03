@@ -1,6 +1,7 @@
 import { clientService } from "./services/clientService.js";
 import { projectService } from "./services/projectService.js";
 import { timeEntryService } from "./services/timeEntryService.js";
+import { showToast } from "./ui.js";
 
 let timerInterval = null;
 let timerRunning = false;
@@ -144,7 +145,7 @@ async function stopTimer() {
     );
   } catch (error) {
     console.error("Erro ao salvar entrada de tempo:", error);
-    alert("Erro ao salvar a entrada de tempo!");
+    showToast("Erro ao salvar a entrada de tempo!", "error");
   }
 }
 

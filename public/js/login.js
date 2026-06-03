@@ -1,6 +1,7 @@
-import { cadastrarUsuario, loginUsuario, loginComGoogle } from "./auth.js";
+import { cadastrarUsuario, loginUsuario, loginComGoogle, processGoogleRedirectResult } from "./auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  processGoogleRedirectResult();
   const linkAlternar = document.getElementById("link-alternar-modo");
   if (linkAlternar) {
     linkAlternar.addEventListener("click", (e) => {
