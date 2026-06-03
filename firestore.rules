@@ -210,6 +210,11 @@ service cloud.firestore {
         && hasValidTimestampStrings();
     }
 
+    function ownsReferencedInvoice(invoiceId) {
+      return exists(/databases/$(database)/documents/invoices/$(invoiceId))
+        && get(/databases/$(database)/documents/invoices/$(invoiceId)).data.user_id == request.auth.uid;
+    }
+
     function isValidInvoiceEmailRequest() {
       return request.resource.data.keys().hasOnly([
           "user_id", "invoice_id", "to", "subject", "status", "attempts",
@@ -218,6 +223,7 @@ service cloud.firestore {
         && ownsIncomingData()
         && request.resource.data.invoice_id is string
         && request.resource.data.invoice_id.size() > 0
+        && ownsReferencedInvoice(request.resource.data.invoice_id)
         && isValidEmailString("to")
         && request.resource.data.subject is string
         && request.resource.data.subject.size() > 0
