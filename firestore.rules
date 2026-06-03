@@ -113,6 +113,24 @@ service cloud.firestore {
         && hasValidTimestampStrings();
     }
 
+    function isValidTimeEntry() {
+      return request.resource.data.keys().hasOnly([
+          "user_id", "description", "project_id", "client_id",
+          "start_time", "end_time", "duration",
+          "criado_em", "atualizado_em"
+        ])
+        && ownsIncomingData()
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 500
+        && isOptionalString("project_id")
+        && isOptionalString("client_id")
+        && request.resource.data.start_time is string
+        && request.resource.data.end_time is string
+        && request.resource.data.duration is number
+        && request.resource.data.duration >= 0
+        && hasValidTimestampStrings();
+    }
+
     function isValidUserProfile(userId) {
       return isUserDoc(userId)
         && request.resource.data.keys().hasOnly([
@@ -249,8 +267,11 @@ service cloud.firestore {
     }
 
     match /time_entries/{docId} {
-      allow read, update, delete: if ownsExistingData();
-      allow create: if ownsIncomingData();
+      allow read, delete: if ownsExistingData();
+      allow create: if isValidTimeEntry();
+      allow update: if ownsExistingData()
+        && ownershipUnchanged()
+        && isValidTimeEntry();
     }
 
     match /invoices/{docId} {
