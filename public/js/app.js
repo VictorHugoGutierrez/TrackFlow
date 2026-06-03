@@ -1,8 +1,12 @@
-import { auth } from "./config/firebase.js";
+import { auth, db } from "./config/firebase.js";
 import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { clientService } from "./modules/services/clientService.js";
 import { projectService } from "./modules/services/projectService.js";
 import { taskService } from "./modules/services/taskService.js";
@@ -42,11 +46,57 @@ function showValidationError(...validations) {
   return true;
 }
 
+function getInitialsFromName(value) {
+  const fallback = "US";
+  const normalizedValue = String(value ?? "").trim();
+  if (!normalizedValue) return fallback;
+
+  const nameSource = normalizedValue.includes("@")
+    ? normalizedValue.split("@")[0].replace(/[._-]+/g, " ")
+    : normalizedValue;
+  const words = nameSource.split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) return fallback;
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toLocaleUpperCase("pt-BR");
+  }
+
+  return `${words[0][0]}${words[words.length - 1][0]}`.toLocaleUpperCase("pt-BR");
+}
+
+function updateSidebarUserProfile(displayName) {
+  const normalizedName = String(displayName ?? "").trim() || "Usuario";
+  const userDisplay = document.getElementById("userEmail");
+  const userAvatar = document.getElementById("userAvatar");
+
+  if (userDisplay) userDisplay.textContent = normalizedName;
+  if (userAvatar) {
+    userAvatar.textContent = getInitialsFromName(normalizedName);
+    userAvatar.title = normalizedName;
+    userAvatar.setAttribute("aria-label", `Usuario ${normalizedName}`);
+  }
+}
+
+async function loadSidebarUserProfile(user) {
+  const fallbackName = user.displayName || user.email || "Usuario";
+  updateSidebarUserProfile(fallbackName);
+
+  try {
+    const userSnapshot = await getDoc(doc(db, "users", user.uid));
+    const profileName = userSnapshot.exists()
+      ? userSnapshot.data().nome
+      : null;
+
+    updateSidebarUserProfile(profileName || fallbackName);
+  } catch (error) {
+    console.warn("Nao foi possivel carregar o perfil do usuario:", error);
+  }
+}
+
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    const userDisplay = document.getElementById("userEmail");
-    if (userDisplay) userDisplay.textContent = user.email || "Victor Hugo";
+    loadSidebarUserProfile(user);
     
     
     renderizarListas().then(() => {
