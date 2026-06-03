@@ -87,6 +87,7 @@ export const clientService = {
 
   async softDelete(clientId) {
     try {
+      const userId = auth.currentUser.uid;
       const ref = doc(db, "clients", clientId);
       await updateDoc(ref, {
         ativo: false,
@@ -94,7 +95,11 @@ export const clientService = {
       });
 
       
-      const qProj = query(collection(db, "projects"), where("client_id", "==", clientId));
+      const qProj = query(
+        collection(db, "projects"),
+        where("user_id", "==", userId),
+        where("client_id", "==", clientId),
+      );
       const snapProj = await getDocs(qProj);
       const batchPromises = snapProj.docs.map((d) => updateDoc(d.ref, { client_id: null, atualizado_em: new Date().toISOString() }));
       await Promise.all(batchPromises);

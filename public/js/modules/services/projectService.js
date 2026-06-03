@@ -123,19 +123,28 @@ export const projectService = {
 
   async hardDelete(projectId) {
     try {
-      await deleteDoc(doc(db, "projects", projectId));
+      const userId = auth.currentUser.uid;
 
       
-      const qTasks = query(collection(db, "tasks"), where("project_id", "==", projectId));
+      const qTasks = query(
+        collection(db, "tasks"),
+        where("user_id", "==", userId),
+        where("project_id", "==", projectId),
+      );
       const snapTasks = await getDocs(qTasks);
       const taskPromises = snapTasks.docs.map((d) => updateDoc(d.ref, { project_id: null, atualizado_em: new Date().toISOString() }));
       
       
-      const qEntries = query(collection(db, "time_entries"), where("project_id", "==", projectId));
+      const qEntries = query(
+        collection(db, "time_entries"),
+        where("user_id", "==", userId),
+        where("project_id", "==", projectId),
+      );
       const snapEntries = await getDocs(qEntries);
       const entryPromises = snapEntries.docs.map((d) => updateDoc(d.ref, { project_id: null, atualizado_em: new Date().toISOString() }));
 
       await Promise.all([...taskPromises, ...entryPromises]);
+      await deleteDoc(doc(db, "projects", projectId));
 
       return true;
     } catch (error) {
