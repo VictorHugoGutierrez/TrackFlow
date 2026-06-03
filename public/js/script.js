@@ -9,12 +9,12 @@ function applyTheme(theme) {
   body.setAttribute("data-theme", theme);
   localStorage.setItem("trackflow-theme", theme);
   if (theme === "light") {
-    iconSun.style.display = "none";
-    iconMoon.style.display = "block";
+    iconSun.classList.add("d-none");
+    iconMoon.classList.remove("d-none");
     themeToggle.setAttribute("aria-label", "Alternar para tema escuro");
   } else {
-    iconSun.style.display = "block";
-    iconMoon.style.display = "none";
+    iconSun.classList.remove("d-none");
+    iconMoon.classList.add("d-none");
     themeToggle.setAttribute("aria-label", "Alternar para tema claro");
   }
 }
