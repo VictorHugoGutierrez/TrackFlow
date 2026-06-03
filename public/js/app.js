@@ -38,6 +38,16 @@ let _unsubTimeEntries = null;
 let _unsubInvoices = null;
 let _settingsCache = { taxa_horaria_padrao: 0 };
 let _faturaEmailPendente = null;
+let _timeEntriesCache = [];
+let _generatedReport = null;
+const DASHBOARD_WEEKLY_GOAL_HOURS = 40;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+const dashboardState = {
+  search: "",
+  projectId: "todos",
+  sort: "recentes",
+};
 
 function showValidationError(...validations) {
   const error = getFirstValidationError(...validations);
@@ -243,6 +253,7 @@ async function renderizarListas() {
 
     
     const projetos = await projectService.getAll();
+    _projetosCache = projetos;
     const listaProj = document.getElementById("lista-projetos");
     if (listaProj) {
       if (projetos.length === 0) {
@@ -277,6 +288,10 @@ async function renderizarListas() {
           )
           .join("");
       }
+    }
+
+    if (Array.isArray(_timeEntriesCache)) {
+      renderDashboard(_timeEntriesCache);
     }
   } catch (error) {
     console.error("Erro ao renderizar:", error);
@@ -469,105 +484,395 @@ function iniciarListenerTimeEntries() {
   });
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safeDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function startOfDay(date = new Date()) {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+function addDays(date, days) {
+  return new Date(date.getTime() + days * DAY_IN_MS);
+}
+
+function getStartOfWeek(date) {
+  const base = startOfDay(date);
+  const dayOfWeek = base.getDay();
+  const diff = base.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  base.setDate(diff);
+  return base;
+}
+
+function entryDuration(entry) {
+  const duration = Number(entry?.duration ?? 0);
+  return Number.isFinite(duration) && duration > 0 ? duration : 0;
+}
+
+function isEntryInRange(entry, start, end) {
+  const date = safeDate(entry.start_time);
+  return date ? date >= start && date < end : false;
+}
+
+function sumEntryDuration(entries) {
+  return entries.reduce((sum, entry) => sum + entryDuration(entry), 0);
+}
+
+function formatCompactDuration(totalSeconds) {
+  const seconds = entryDuration({ duration: totalSeconds });
+  const hours = seconds / 3600;
+  if (hours >= 1) return `${hours.toFixed(1)}h`;
+  return `${Math.round(seconds / 60)}m`;
+}
+
+function pluralize(count, singular, plural) {
+  return count === 1 ? singular : plural;
+}
+
+function getProjectRate(entry) {
+  let taxa = Number(_settingsCache.taxa_horaria_padrao || 0);
+  if (entry.project_id) {
+    const proj = _projetosCache.find((p) => p.id === entry.project_id);
+    const projectRate = Number(proj?.taxa_horaria ?? 0);
+    if (Number.isFinite(projectRate) && projectRate > 0) taxa = projectRate;
+  }
+  return Number.isFinite(taxa) ? taxa : 0;
+}
+
+function getEntryRevenue(entry) {
+  return (entryDuration(entry) / 3600) * getProjectRate(entry);
+}
+
+function setMetricText(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
+}
+
+function renderTodayTrend(entries, todayStart, totalHojeSegundos) {
+  const trendEl = document.getElementById("metric-total-hoje-trend");
+  const sparklineEl = document.getElementById("metric-total-hoje-sparkline");
+  const yesterdayStart = addDays(todayStart, -1);
+  const yesterdaySeconds = sumEntryDuration(
+    entries.filter((entry) => isEntryInRange(entry, yesterdayStart, todayStart)),
+  );
+
+  if (trendEl) {
+    let tone = "neutral";
+    let icon = "fa-minus";
+    let label = "Sem variação";
+
+    if (yesterdaySeconds === 0 && totalHojeSegundos > 0) {
+      tone = "up";
+      icon = "fa-arrow-trend-up";
+      label = "Novo hoje";
+    } else if (yesterdaySeconds > 0) {
+      const percent = ((totalHojeSegundos - yesterdaySeconds) / yesterdaySeconds) * 100;
+      tone = percent >= 0 ? "up" : "down";
+      icon = percent >= 0 ? "fa-arrow-trend-up" : "fa-arrow-trend-down";
+      label = `${percent >= 0 ? "+" : ""}${percent.toFixed(0)}% vs ontem`;
+    }
+
+    trendEl.className = `metric-trend ${tone} fw-500 fs-sm`;
+    trendEl.innerHTML = `<i class="fa-solid ${icon}"></i> ${label}`;
+  }
+
+  if (!sparklineEl) return;
+
+  const days = Array.from({ length: 7 }, (_, index) => addDays(todayStart, index - 6));
+  const dayTotals = days.map((day) =>
+    sumEntryDuration(entries.filter((entry) => isEntryInRange(entry, day, addDays(day, 1)))),
+  );
+  const maxValue = Math.max(1, ...dayTotals);
+
+  sparklineEl.innerHTML = dayTotals
+    .map((seconds, index) => {
+      const height = seconds > 0 ? Math.max(14, (seconds / maxValue) * 100) : 10;
+      const dayLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+        .format(days[index])
+        .replace(".", "");
+      return `
+        <span
+          class="mini-chart-bar ${seconds === 0 ? "empty" : ""}"
+          style="height:${height}%"
+          title="${escapeHtml(`${dayLabel}: ${formatCompactDuration(seconds)}`)}"
+        ></span>`;
+    })
+    .join("");
+}
+
+function renderWeekGoal(totalSemanaSegundos) {
+  const goalHours = Number(_settingsCache.meta_semanal_horas || DASHBOARD_WEEKLY_GOAL_HOURS);
+  const safeGoalHours =
+    Number.isFinite(goalHours) && goalHours > 0 ? goalHours : DASHBOARD_WEEKLY_GOAL_HOURS;
+  const totalSemanaHoras = totalSemanaSegundos / 3600;
+  const percent = Math.min(100, (totalSemanaHoras / safeGoalHours) * 100);
+  const remainingHours = Math.max(0, safeGoalHours - totalSemanaHoras);
+  const progress = document.querySelector(".metric-progress");
+  const bar = document.getElementById("metric-week-goal-bar");
+
+  setMetricText("metric-week-goal-label", `Meta: ${Math.round(percent)}% de ${safeGoalHours}h`);
+  setMetricText(
+    "metric-week-goal-hours",
+    remainingHours > 0 ? `${remainingHours.toFixed(1)}h restantes` : "Meta atingida",
+  );
+
+  if (bar) bar.style.width = `${percent}%`;
+  if (progress) progress.setAttribute("aria-valuenow", String(Math.round(percent)));
+}
+
+function renderDashboardWeeklyBars(entriesSemana, startWeek, totalSemanaSegundos) {
+  const container = document.getElementById("dashboard-weekly-bars");
+  const summary = document.getElementById("dashboard-weekly-summary");
+  if (summary) {
+    summary.textContent = `${formatCompactDuration(totalSemanaSegundos)} em ${entriesSemana.length} ${pluralize(entriesSemana.length, "registro", "registros")}`;
+  }
+  if (!container) return;
+
+  const today = startOfDay(new Date());
+  const days = Array.from({ length: 7 }, (_, index) => addDays(startWeek, index));
+  const totals = days.map((day) =>
+    sumEntryDuration(entriesSemana.filter((entry) => isEntryInRange(entry, day, addDays(day, 1)))),
+  );
+  const maxValue = Math.max(1, ...totals);
+
+  container.innerHTML = days
+    .map((day, index) => {
+      const seconds = totals[index];
+      const percent = seconds > 0 ? Math.max(8, (seconds / maxValue) * 100) : 5;
+      const label = new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+        .format(day)
+        .replace(".", "");
+      const isToday = day.getTime() === today.getTime();
+
+      return `
+        <div class="dashboard-week-day ${isToday ? "today" : ""}">
+          <div class="dashboard-week-bar-track" title="${escapeHtml(`${label}: ${formatCompactDuration(seconds)}`)}">
+            <span class="dashboard-week-bar ${seconds === 0 ? "empty" : ""}" style="height:${percent}%"></span>
+          </div>
+          <span class="dashboard-week-day-label">${escapeHtml(label)}</span>
+          <span class="dashboard-week-day-value">${formatCompactDuration(seconds)}</span>
+        </div>`;
+    })
+    .join("");
+}
+
+function renderDashboardProjectBreakdown(entriesSemana) {
+  const container = document.getElementById("dashboard-project-breakdown");
+  const summary = document.getElementById("dashboard-project-summary");
+  if (!container) return;
+
+  const totals = new Map();
+  entriesSemana.forEach((entry) => {
+    const key = entry.project_id || "sem_projeto";
+    const current = totals.get(key) ?? {
+      id: key,
+      name: entry.project_id ? nomeProjeto(entry.project_id) : "Sem Projeto",
+      seconds: 0,
+      count: 0,
+    };
+    current.seconds += entryDuration(entry);
+    current.count += 1;
+    totals.set(key, current);
+  });
+
+  const rows = [...totals.values()]
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, 5);
+
+  if (summary) {
+    const projectCount = rows.filter((row) => row.id !== "sem_projeto").length;
+    summary.textContent = rows.length
+      ? `${projectCount} ${pluralize(projectCount, "projeto", "projetos")} com tempo`
+      : "Sem apontamentos";
+  }
+
+  if (rows.length === 0) {
+    container.innerHTML = `<div class="list-empty">Nenhum apontamento nesta semana.</div>`;
+    return;
+  }
+
+  const maxValue = Math.max(1, ...rows.map((row) => row.seconds));
+  container.innerHTML = rows
+    .map((row) => {
+      const percent = Math.max(6, (row.seconds / maxValue) * 100);
+      return `
+        <div class="dashboard-breakdown-row">
+          <div class="dashboard-breakdown-info">
+            <span class="dashboard-breakdown-name">${escapeHtml(row.name)}</span>
+            <span class="dashboard-breakdown-meta">${row.count} ${pluralize(row.count, "registro", "registros")}</span>
+          </div>
+          <div class="dashboard-breakdown-bar" aria-hidden="true">
+            <span style="width:${percent}%"></span>
+          </div>
+          <span class="dashboard-breakdown-value">${formatCompactDuration(row.seconds)}</span>
+        </div>`;
+    })
+    .join("");
+}
+
+function renderDashboardProjectFilter(entriesHoje) {
+  const select = document.getElementById("dashboard-activity-project-filter");
+  if (!select) return;
+
+  const currentValue = dashboardState.projectId || "todos";
+  const projects = new Map();
+  const hasNoProject = entriesHoje.some((entry) => !entry.project_id);
+
+  entriesHoje.forEach((entry) => {
+    if (entry.project_id) projects.set(entry.project_id, nomeProjeto(entry.project_id));
+  });
+
+  const options = [
+    `<option value="todos">Todos os projetos</option>`,
+    ...[...projects.entries()]
+      .sort(([, a], [, b]) => a.localeCompare(b, "pt-BR"))
+      .map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`),
+  ];
+
+  if (hasNoProject) options.push(`<option value="sem_projeto">Sem projeto</option>`);
+
+  select.innerHTML = options.join("");
+  const validValues = new Set(["todos", "sem_projeto", ...projects.keys()]);
+  select.value = validValues.has(currentValue) ? currentValue : "todos";
+  dashboardState.projectId = select.value;
+}
+
+function filteredDashboardActivities(entriesHoje) {
+  const search = dashboardState.search;
+
+  return entriesHoje
+    .filter((entry) => {
+      if (dashboardState.projectId === "sem_projeto" && entry.project_id) return false;
+      if (
+        dashboardState.projectId !== "todos" &&
+        dashboardState.projectId !== "sem_projeto" &&
+        entry.project_id !== dashboardState.projectId
+      ) {
+        return false;
+      }
+
+      if (!search) return true;
+      const start = safeDate(entry.start_time);
+      const haystack = [
+        entry.description,
+        entry.project_id ? nomeProjeto(entry.project_id) : "Sem Projeto",
+        entry.client_id ? nomeCliente(entry.client_id) : "",
+        start ? formatHour(start) : "",
+      ]
+        .join(" ")
+        .toLocaleLowerCase("pt-BR");
+
+      return haystack.includes(search);
+    })
+    .sort((a, b) => {
+      if (dashboardState.sort === "duracao") {
+        return entryDuration(b) - entryDuration(a);
+      }
+      return new Date(b.start_time) - new Date(a.start_time);
+    });
+}
+
 function renderDashboard(entries) {
   const listEl = document.getElementById("dashboard-activities-list");
   if (!listEl) return;
 
   
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
-  const amanha = new Date(hoje);
-  amanha.setDate(amanha.getDate() + 1);
+  const hoje = startOfDay(new Date());
+  const amanha = addDays(hoje, 1);
 
   const entriesHoje = entries.filter((e) => {
-    const d = new Date(e.start_time);
-    return d >= hoje && d < amanha;
+    return isEntryInRange(e, hoje, amanha);
   });
 
   
-  const dayOfWeek = hoje.getDay(); 
-  const startOfWeek = new Date(hoje);
-  const diff = hoje.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-  startOfWeek.setDate(diff);
-  startOfWeek.setHours(0,0,0,0);
+  const startWeek = getStartOfWeek(hoje);
   
   const entriesSemana = entries.filter((e) => {
-    const d = new Date(e.start_time);
-    return d >= startOfWeek;
+    return isEntryInRange(e, startWeek, amanha);
   });
 
   
-  const totalHojeSegundos = entriesHoje.reduce((sum, e) => sum + (e.duration || 0), 0);
-  const totalSemanaSegundos = entriesSemana.reduce((sum, e) => sum + (e.duration || 0), 0);
+  const totalHojeSegundos = sumEntryDuration(entriesHoje);
+  const totalSemanaSegundos = sumEntryDuration(entriesSemana);
   
   const totalHojeHoras = totalHojeSegundos / 3600;
   const totalSemanaHoras = totalSemanaSegundos / 3600;
 
-  
-  const elHoje = document.getElementById("metric-total-hoje");
-  const elSemana = document.getElementById("metric-total-semana");
-  const elReceita = document.getElementById("metric-receita-estimada");
-  const elProjetos = document.getElementById("metric-projetos-ativos");
+  setMetricText("metric-total-hoje", `${totalHojeHoras.toFixed(1)}h`);
+  setMetricText("metric-total-semana", `${totalSemanaHoras.toFixed(1)}h`);
 
-  if (elHoje) elHoje.textContent = `${totalHojeHoras.toFixed(1)}h`;
-  if (elSemana) elSemana.textContent = `${totalSemanaHoras.toFixed(1)}h`;
-  if (elReceita) {
-    let receitaHoje = 0;
-    entriesHoje.forEach((e) => {
-      let taxa = _settingsCache.taxa_horaria_padrao || 0;
-      if (e.project_id) {
-        const proj = _projetosCache.find((p) => p.id === e.project_id);
-        if (proj && proj.taxa_horaria !== undefined && proj.taxa_horaria !== null && proj.taxa_horaria > 0) {
-          taxa = proj.taxa_horaria;
-        }
-      }
-      receitaHoje += ((e.duration || 0) / 3600) * taxa;
-    });
-    elReceita.textContent = receitaHoje.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
-  }
-  const elTaxBase = document.getElementById("metric-taxa-base");
-  if (elTaxBase) {
-    const baseTaxFormatted = (_settingsCache.taxa_horaria_padrao || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
-    elTaxBase.textContent = `Taxa Base: ${baseTaxFormatted}/h`;
-  }
-  if (elProjetos) {
-    
-    const ativosCount = _projetosCache.filter((p) => p.status === "em_andamento" || !p.status).length;
-    elProjetos.textContent = ativosCount || 0;
-  }
+  const receitaHoje = entriesHoje.reduce((sum, entry) => sum + getEntryRevenue(entry), 0);
+  setMetricText(
+    "metric-receita-estimada",
+    receitaHoje.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
+  );
 
-  
+  const faturaveisHoje = entriesHoje.filter((entry) => getProjectRate(entry) > 0).length;
+  setMetricText(
+    "metric-receita-detalhe",
+    `${faturaveisHoje} ${pluralize(faturaveisHoje, "registro faturável", "registros faturáveis")} hoje`,
+  );
+
+  const ativosCount = _projetosCache.filter((p) => p.status === "em_andamento" || !p.status).length;
+  const projetosComTempoSemana = new Set(
+    entriesSemana.filter((entry) => entry.project_id).map((entry) => entry.project_id),
+  ).size;
+  setMetricText("metric-projetos-ativos", String(ativosCount || 0));
+  setMetricText(
+    "metric-projetos-detalhe",
+    `${projetosComTempoSemana} ${pluralize(projetosComTempoSemana, "com apontamento", "com apontamentos")} na semana`,
+  );
+
+  renderTodayTrend(entries, hoje, totalHojeSegundos);
+  renderWeekGoal(totalSemanaSegundos);
+  renderDashboardWeeklyBars(entriesSemana, startWeek, totalSemanaSegundos);
+  renderDashboardProjectBreakdown(entriesSemana);
+  renderDashboardProjectFilter(entriesHoje);
+
+  const atividadesFiltradas = filteredDashboardActivities(entriesHoje);
+
   if (entriesHoje.length === 0) {
     listEl.innerHTML = `<div class="list-empty">Nenhum registro rastreado hoje ainda.</div>`;
     return;
   }
 
-  listEl.innerHTML = entriesHoje
+  if (atividadesFiltradas.length === 0) {
+    listEl.innerHTML = `<div class="list-empty">Nenhuma atividade encontrada com os filtros atuais.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = atividadesFiltradas
     .map((e) => {
-      const duracaoStr = formatDuration(e.duration || 0);
+      const duracaoStr = formatDuration(entryDuration(e));
       const desc = e.description ? e.description : "Sem Descrição";
       const descClass = e.description ? "" : "empty";
 
       
-      const startD = new Date(e.start_time);
-      const endD = new Date(e.end_time);
-      const timeStr = `${formatHour(startD)} - ${formatHour(endD)}`;
+      const startD = safeDate(e.start_time);
+      const endD = safeDate(e.end_time);
+      const timeStr = `${startD ? formatHour(startD) : "--:--"} - ${endD ? formatHour(endD) : "Agora"}`;
 
       
       let tagsHTML = "";
       if (e.project_id) {
         const projName = nomeProjeto(e.project_id);
-        tagsHTML += `<span class="tag-project">${projName}</span>`;
+        tagsHTML += `<span class="tag-project">${escapeHtml(projName)}</span>`;
       }
       if (e.client_id) {
         const cliName = nomeCliente(e.client_id);
-        tagsHTML += `<span class="tag-client">${cliName}</span>`;
+        tagsHTML += `<span class="tag-client">${escapeHtml(cliName)}</span>`;
       }
 
       
@@ -581,7 +886,7 @@ function renderDashboard(entries) {
             <i class="fa-solid fa-circle-play activity-play-indicator"></i>
             <span class="activity-duration">${duracaoStr}</span>
             <div class="activity-details">
-              <span class="activity-description ${descClass}">${desc}</span>
+              <span class="activity-description ${descClass}">${escapeHtml(desc)}</span>
               <div class="activity-tags">
                 ${tagsHTML}
               </div>
@@ -589,7 +894,7 @@ function renderDashboard(entries) {
           </div>
           <div class="activity-right">
             <span class="activity-time">${timeStr}</span>
-            <button class="btn-edit-activity" onclick="abrirEdicaoTimeEntry('${e.id}')" title="Editar Registro" style="background:transparent; border:none; color:var(--text-sub); cursor:pointer; font-size:1rem; padding:0.5rem; transition:color 0.2s;">
+            <button class="btn-edit-activity" onclick="abrirEdicaoTimeEntry('${e.id}')" title="Editar Registro">
               <i class="fa-solid fa-pen"></i>
             </button>
             <button class="btn-delete-activity" onclick="deletarRegistroTempo('${e.id}')" title="Excluir Registro">
@@ -615,6 +920,27 @@ function formatHour(dateObj) {
   const hrs = dateObj.getHours().toString().padStart(2, "0");
   const mins = dateObj.getMinutes().toString().padStart(2, "0");
   return `${hrs}:${mins}`;
+}
+
+function initDashboardControls() {
+  const searchInput = document.getElementById("dashboard-activity-search");
+  const projectFilter = document.getElementById("dashboard-activity-project-filter");
+  const sortSelect = document.getElementById("dashboard-activity-sort");
+
+  searchInput?.addEventListener("input", () => {
+    dashboardState.search = searchInput.value.trim().toLocaleLowerCase("pt-BR");
+    renderDashboard(_timeEntriesCache);
+  });
+
+  projectFilter?.addEventListener("change", () => {
+    dashboardState.projectId = projectFilter.value;
+    renderDashboard(_timeEntriesCache);
+  });
+
+  sortSelect?.addEventListener("change", () => {
+    dashboardState.sort = sortSelect.value;
+    renderDashboard(_timeEntriesCache);
+  });
 }
 
 window.deletarRegistroTempo = async (id) => {
@@ -646,9 +972,6 @@ window.abrirEdicaoTimeEntry = async (id) => {
 };
 
 
-
-let _timeEntriesCache = [];
-let _generatedReport = null;
 
 async function carregarSelectClientesBilling() {
   if (!auth.currentUser) return;
@@ -984,6 +1307,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   
   initRelatorios();
+  initDashboardControls();
 
   
   document.getElementById("btn-novo-cliente")?.addEventListener("click", () => {

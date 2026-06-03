@@ -194,19 +194,16 @@
                 <div class="metric-card-value" id="metric-total-hoje">0.0h</div>
                 <div class="metric-card-footer">
                   <span
+                    id="metric-total-hoje-trend"
                     class="text-play fw-500 fs-sm"
                   >
-                    <i class="fa-solid fa-arrow-trend-up"></i> +12%
+                    <i class="fa-solid fa-minus"></i> Sem dados
                   </span>
-                  
-                  <svg class="mini-chart" viewBox="0 0 100 30">
-                    <path
-                      d="M0,25 Q15,10 30,18 T60,5 T90,20 T100,10"
-                      fill="none"
-                      stroke="#10b981"
-                      stroke-width="2"
-                    ></path>
-                  </svg>
+                  <div
+                    id="metric-total-hoje-sparkline"
+                    class="mini-chart"
+                    aria-label="Evolução diária da semana"
+                  ></div>
                 </div>
               </div>
 
@@ -222,10 +219,25 @@
                 <div class="metric-card-value" id="metric-total-semana">
                   0.0h
                 </div>
-                <div class="metric-card-footer">
-                  <span class="text-sub fs-sm"
-                    >Meta: 40h</span
+                <div class="metric-card-footer metric-card-footer-stacked">
+                  <div class="metric-progress-row">
+                    <span id="metric-week-goal-label" class="text-sub fs-sm"
+                      >Meta: 0% de 40h</span
+                    >
+                    <span id="metric-week-goal-hours" class="text-sub fs-sm"
+                      >0.0h restantes</span
+                    >
+                  </div>
+                  <div
+                    class="metric-progress"
+                    role="progressbar"
+                    aria-label="Progresso da meta semanal"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
                   >
+                    <span id="metric-week-goal-bar"></span>
+                  </div>
                 </div>
               </div>
 
@@ -243,9 +255,9 @@
                 </div>
                 <div class="metric-card-footer">
                   <span
-                    id="metric-taxa-base"
+                    id="metric-receita-detalhe"
                     class="text-sub fs-sm"
-                    >Taxa Base: R$ 0,00/h</span
+                    >0 registros faturáveis hoje</span
                   >
                 </div>
               </div>
@@ -263,16 +275,84 @@
                   0
                 </div>
                 <div class="metric-card-footer">
-                  <span class="text-sub fs-sm"
-                    >Em andamento</span
+                  <span id="metric-projetos-detalhe" class="text-sub fs-sm"
+                    >0 com apontamentos na semana</span
                   >
                 </div>
               </div>
             </div>
 
+            <div class="dashboard-insights-grid">
+              <section class="dashboard-panel">
+                <div class="dashboard-panel-header">
+                  <div>
+                    <h3>Resumo da Semana</h3>
+                    <span id="dashboard-weekly-summary">0 registros</span>
+                  </div>
+                </div>
+                <div
+                  id="dashboard-weekly-bars"
+                  class="dashboard-weekly-bars"
+                  aria-label="Horas rastreadas por dia da semana"
+                ></div>
+              </section>
+
+              <section class="dashboard-panel">
+                <div class="dashboard-panel-header">
+                  <div>
+                    <h3>Tempo por Projeto</h3>
+                    <span id="dashboard-project-summary">Sem apontamentos</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="dashboard-panel-action"
+                    onclick="switchPage('page-gestao', 'tab-projetos')"
+                    title="Abrir projetos"
+                    aria-label="Abrir projetos"
+                  >
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </button>
+                </div>
+                <div
+                  id="dashboard-project-breakdown"
+                  class="dashboard-breakdown"
+                ></div>
+              </section>
+            </div>
+
             
             <div class="activities-panel">
-              <h3>Atividades de Hoje</h3>
+              <div class="activities-panel-header">
+                <h3>Atividades de Hoje</h3>
+                <div class="activities-controls">
+                  <div class="activity-search">
+                    <i
+                      class="fa-solid fa-magnifying-glass"
+                      aria-hidden="true"
+                    ></i>
+                    <input
+                      type="search"
+                      id="dashboard-activity-search"
+                      placeholder="Buscar atividade"
+                      aria-label="Buscar atividade"
+                      autocomplete="off"
+                    />
+                  </div>
+                  <select
+                    id="dashboard-activity-project-filter"
+                    aria-label="Filtrar atividades por projeto"
+                  >
+                    <option value="todos">Todos os projetos</option>
+                  </select>
+                  <select
+                    id="dashboard-activity-sort"
+                    aria-label="Ordenar atividades"
+                  >
+                    <option value="recentes">Mais recentes</option>
+                    <option value="duracao">Maior duração</option>
+                  </select>
+                </div>
+              </div>
               <div class="activities-list" id="dashboard-activities-list">
                 <div class="list-empty">
                   Nenhum registro rastreado hoje ainda.
