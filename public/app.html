@@ -23,56 +23,60 @@
   </head>
   <body class="page-app" data-theme="dark">
     
-    <header>
-      <h1 class="app-logo">
-        <img
-          src="images/Trackflow.png"
-          alt="TrackFlow Logo"
-          class="header-logo-img"
-        />
-        TrackFlow
-      </h1>
+    <header class="app-header">
+      <div class="app-header-left">
+        <h1 class="app-logo">
+          <img
+            src="images/Trackflow.png"
+            alt="TrackFlow Logo"
+            class="header-logo-img"
+          />
+          <span>TrackFlow</span>
+        </h1>
+      </div>
 
       
-      <div class="header-timer-widget">
-        <input
-          type="text"
-          id="timer-descricao"
-          class="timer-desc-input"
-          placeholder="O que você está fazendo agora?"
-        />
+      <div class="app-header-center">
+        <div class="header-timer-widget">
+          <input
+            type="text"
+            id="timer-descricao"
+            class="timer-desc-input"
+            placeholder="O que você está fazendo agora?"
+          />
 
-        <div class="timer-select-group">
-          <div class="timer-select-wrapper">
-            <i class="fa-solid fa-user-tie"></i>
-            <select id="timer-cliente" class="timer-dropdown">
-              <option value="">Vincular Cliente</option>
-            </select>
+          <div class="timer-select-group">
+            <div class="timer-select-wrapper">
+              <i class="fa-solid fa-user-tie"></i>
+              <select id="timer-cliente" class="timer-dropdown">
+                <option value="">Vincular Cliente</option>
+              </select>
+            </div>
+
+            <div class="timer-select-wrapper">
+              <i class="fa-solid fa-diagram-project"></i>
+              <select id="timer-projeto" class="timer-dropdown">
+                <option value="">Vincular Projeto</option>
+              </select>
+            </div>
           </div>
 
-          <div class="timer-select-wrapper">
-            <i class="fa-solid fa-diagram-project"></i>
-            <select id="timer-projeto" class="timer-dropdown">
-              <option value="">Vincular Projeto</option>
-            </select>
+          <div class="timer-clock-container">
+            <span id="timer-cronometro" class="timer-clock-display"
+              >00:00:00</span
+            >
+            <button
+              id="timer-btn-toggle"
+              class="timer-play-btn"
+              title="Iniciar Rastreamento"
+            >
+              <i id="timer-icon" class="fa-solid fa-play"></i>
+            </button>
           </div>
-        </div>
-
-        <div class="timer-clock-container">
-          <span id="timer-cronometro" class="timer-clock-display"
-            >00:00:00</span
-          >
-          <button
-            id="timer-btn-toggle"
-            class="timer-play-btn"
-            title="Iniciar Rastreamento"
-          >
-            <i id="timer-icon" class="fa-solid fa-play"></i>
-          </button>
         </div>
       </div>
 
-      <div class="d-flex-align-center-gap-sm">
+      <div class="app-header-actions d-flex-align-center-gap-sm">
         <button
           id="btn-pomodoro-toggle"
           title="Ativar/Desativar Pomodoro"

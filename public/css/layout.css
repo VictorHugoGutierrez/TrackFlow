@@ -93,27 +93,52 @@ body.page-app {
 }
 
 
-body.page-app header {
-  display: flex;
-  justify-content: space-between;
+body.page-app header,
+.app-header {
+  display: grid;
+  grid-template-columns: minmax(170px, 240px) minmax(0, 1fr) auto;
   align-items: center;
-  padding: 0.5rem 1.5rem;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  padding: 0.75rem clamp(1rem, 2vw, 1.5rem);
   background-color: var(--bg-secondary);
   box-shadow: var(--shadow-md);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 64px;
 }
 
+.app-header-left,
+.app-header-center,
+.app-header-actions {
+  min-width: 0;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-header-center {
+  display: flex;
+  justify-content: center;
+}
+
+.app-header-actions {
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
 
 .app-logo {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.5px;
-  flex-shrink: 0;
+  letter-spacing: 0;
+  min-width: 0;
+  max-width: 100%;
   background: linear-gradient(135deg, var(--play-color), var(--accent-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -122,11 +147,18 @@ body.page-app header {
   gap: 0.5rem;
 }
 
+.app-logo span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .app-container {
   display: flex;
   flex: 1;
-  min-height: calc(100vh - 64px);
+  min-width: 0;
+  min-height: calc(100vh - 72px);
   overflow: visible;
 }
 
@@ -243,6 +275,7 @@ body.page-app main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow-y: auto;
   background-color: var(--bg-primary);
 }
@@ -288,36 +321,9 @@ body.page-app main {
     max-width: 100%;
   }
 
-  .header-timer-widget {
-    max-width: 100%;
-    margin: 0 1rem;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
-  .timer-select-group,
-  .timer-clock-container {
-    min-width: 0;
-    flex: 1 1 100%;
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid var(--border-color);
-    padding-top: 0.75rem;
-    margin-top: 0.75rem;
-  }
 }
 
 @media (max-width: 768px) {
-  .header-timer-widget {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .timer-dropdown {
-    max-width: 100% !important;
-    min-width: 0;
-  }
-
   .metrics-grid {
     grid-template-columns: 1fr;
   }
@@ -329,19 +335,23 @@ body.page-app main {
 
 
 .header-timer-widget {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) auto auto;
+  grid-template-areas: "desc selects clock";
   align-items: center;
+  width: min(100%, 860px);
+  min-width: 0;
   gap: 0.75rem;
-  flex: 1;
-  max-width: 750px;
-  margin: 0 1.5rem;
+  margin: 0;
   background-color: rgba(15, 23, 42, 0.4);
-  padding: 0.25rem 0.5rem 0.25rem 1rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.875rem;
   border-radius: 999px;
   border: 1px solid var(--border-color);
 }
 
 .timer-desc-input {
+  grid-area: desc;
+  min-width: 0;
   border: none !important;
   background: transparent !important;
   color: var(--text-main) !important;
@@ -350,6 +360,9 @@ body.page-app main {
   width: 100% !important;
   outline: none !important;
   box-shadow: none !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .timer-desc-input::placeholder {
@@ -357,12 +370,13 @@ body.page-app main {
 }
 
 .timer-select-group {
+  grid-area: selects;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
   border-left: 1px solid var(--border-color);
   padding-left: 0.75rem;
-  flex-shrink: 0;
 }
 
 .timer-select-wrapper {
@@ -371,10 +385,13 @@ body.page-app main {
   gap: 0.35rem;
   color: var(--text-sub);
   position: relative;
+  min-width: 0;
+  max-width: 150px;
 }
 
 .timer-select-wrapper i {
   font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .timer-dropdown {
@@ -385,14 +402,17 @@ body.page-app main {
   font-weight: 500 !important;
   padding: 0.25rem 1.25rem 0.25rem 0.25rem !important;
   cursor: pointer !important;
-  width: auto !important;
-  min-width: 110px;
-  max-width: 140px;
+  width: 100% !important;
+  min-width: 0;
+  max-width: none;
   outline: none !important;
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg fill='%2394A3B8' height='10' viewBox='0 0 24 24' width='10' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") !important;
   background-repeat: no-repeat !important;
   background-position: right center !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .timer-dropdown:focus {
@@ -401,9 +421,11 @@ body.page-app main {
 }
 
 .timer-clock-container {
+  grid-area: clock;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: max-content;
   border-left: 1px solid var(--border-color);
   padding-left: 0.75rem;
   flex-shrink: 0;
@@ -414,7 +436,7 @@ body.page-app main {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-main);
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
   min-width: 75px;
   text-align: center;
 }
@@ -466,6 +488,121 @@ body.page-app main {
 
 .timer-play-btn.running:hover {
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+@media (max-width: 1024px) {
+  body.page-app header,
+  .app-header {
+    grid-template-columns: minmax(140px, 180px) minmax(0, 1fr) auto;
+    gap: 0.75rem;
+  }
+
+  .header-timer-widget {
+    grid-template-columns: minmax(120px, 1fr) auto;
+    grid-template-areas:
+      "desc clock"
+      "selects selects";
+    width: 100%;
+    border-radius: 18px;
+    padding: 0.5rem 0.625rem;
+  }
+
+  .timer-select-group {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding-left: 0;
+    padding-top: 0.5rem;
+  }
+
+  .timer-select-wrapper {
+    flex: 1 1 0;
+    max-width: none;
+  }
+
+  .timer-clock-container {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  body.page-app header,
+  .app-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left actions"
+      "center center";
+    align-items: start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .app-header-left {
+    grid-area: left;
+  }
+
+  .app-header-center {
+    grid-area: center;
+    width: 100%;
+  }
+
+  .app-header-actions {
+    grid-area: actions;
+  }
+
+  .header-timer-widget {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  body.page-app header,
+  .app-header {
+    padding: 0.75rem;
+  }
+
+  .app-logo {
+    font-size: 1.125rem;
+  }
+
+  .header-logo-img {
+    height: 24px;
+  }
+
+  .header-timer-widget {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "desc"
+      "selects"
+      "clock";
+    gap: 0.6rem;
+    border-radius: 16px;
+    padding: 0.75rem;
+  }
+
+  .timer-select-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .timer-select-wrapper {
+    width: 100%;
+  }
+
+  .timer-clock-container {
+    width: 100%;
+    justify-content: space-between;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding-left: 0;
+    padding-top: 0.6rem;
+  }
+
+  .timer-clock-display {
+    min-width: 0;
+    text-align: left;
+  }
 }
 
 

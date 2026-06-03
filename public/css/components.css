@@ -1263,16 +1263,24 @@ body.page-app button[type="submit"]:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-header-config {
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-sub);
-  padding: 0.4rem 0.75rem;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
   transition: background 0.2s, color 0.2s;
 }
 
