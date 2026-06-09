@@ -2,6 +2,7 @@ import { auth, db } from "./config/firebase.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
@@ -16,6 +17,7 @@ import {
 import { showToast } from "./modules/ui.js";
 import {
   createValidationError,
+  validateEmail,
   validateLoginInput,
   validateSignupInput,
 } from "./modules/validators.js";
@@ -106,6 +108,19 @@ function authErrorMessage(error) {
   return messages[error.code] ?? "Não foi possível concluir a autenticação.";
 }
 
+function passwordResetErrorMessage(error) {
+  const messages = {
+    "auth/invalid-email": "Informe um e-mail válido.",
+    "auth/missing-email": "Informe o e-mail cadastrado.",
+    "auth/operation-not-allowed":
+      "A recuperação por e-mail não está habilitada no Firebase.",
+    "auth/too-many-requests":
+      "Muitas tentativas em sequência. Aguarde alguns minutos e tente novamente.",
+  };
+
+  return messages[error.code] ?? "Não foi possível enviar o e-mail de redefinição.";
+}
+
 export async function processGoogleRedirectResult() {
   try {
     const result = await getRedirectResult(auth);
@@ -116,6 +131,32 @@ export async function processGoogleRedirectResult() {
   } catch (error) {
     console.error("Erro no retorno do login Google:", error);
     showToast(authErrorMessage(error), "error");
+  }
+}
+
+export async function enviarEmailRedefinicaoSenha(email) {
+  const validation = validateEmail(email);
+  const successMessage =
+    "Se houver uma conta com este e-mail, enviaremos as instruções de redefinição.";
+
+  if (validation.error) {
+    showToast(validation.error, "error");
+    throw createValidationError(validation.error);
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, validation.value);
+    showToast(successMessage, "success", 5000);
+  } catch (error) {
+    console.error("Erro no reset de senha:", error);
+
+    if (error.code === "auth/user-not-found") {
+      showToast(successMessage, "success", 5000);
+      return;
+    }
+
+    showToast(passwordResetErrorMessage(error), "error");
+    throw error;
   }
 }
 

@@ -1,4 +1,10 @@
-import { cadastrarUsuario, loginUsuario, loginComGoogle, processGoogleRedirectResult } from "./auth.js";
+import {
+  cadastrarUsuario,
+  enviarEmailRedefinicaoSenha,
+  loginUsuario,
+  loginComGoogle,
+  processGoogleRedirectResult,
+} from "./auth.js";
 import { showToast } from "./modules/ui.js";
 import { validateLoginInput, validateSignupInput } from "./modules/validators.js";
 
@@ -13,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const form = document.getElementById("form-autenticacao");
+  const btnEsqueci = document.getElementById("btn-esqueci");
   const btnGoogle = document.getElementById("btn-google");
 
   if (form) {
@@ -59,6 +66,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  btnEsqueci?.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    const inputEmail = document.getElementById("input-email");
+    const email = inputEmail?.value?.trim() ?? "";
+    const labelOriginal = btnEsqueci.textContent;
+
+    btnEsqueci.setAttribute("aria-disabled", "true");
+    btnEsqueci.style.pointerEvents = "none";
+    btnEsqueci.textContent = "Enviando...";
+
+    try {
+      await enviarEmailRedefinicaoSenha(email);
+    } catch (error) {
+      if (error?.name === "ValidationError") {
+        inputEmail?.focus();
+      }
+    } finally {
+      btnEsqueci.removeAttribute("aria-disabled");
+      btnEsqueci.style.pointerEvents = "";
+      btnEsqueci.textContent = labelOriginal;
+    }
+  });
 
   btnGoogle?.addEventListener("click", async () => {
     const labelOriginal = btnGoogle.innerHTML;
