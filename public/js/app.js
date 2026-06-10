@@ -302,13 +302,26 @@ async function renderizarListas() {
   carregarSelectClientesBilling();
 }
 
-async function carregarSelectClientes(selectId = "proj-cliente") {
+async function carregarSelectClientes(selectId = "proj-cliente", selectedClientId = null) {
   if (!auth.currentUser) return;
-  const clientes = await clientService.getAllActive();
+  
+  let clientes;
+  try {
+    if (selectedClientId) {
+      const todosClientes = await clientService.getAll();
+      clientes = todosClientes.filter(c => c.ativo || c.id === selectedClientId);
+    } else {
+      clientes = await clientService.getAllActive();
+    }
+  } catch (error) {
+    console.error("Erro ao carregar clientes para o select:", error);
+    clientes = [];
+  }
+
   const select = document.getElementById(selectId);
   if (select) {
     const options = clientes.map(
-      (c) => `<option value="${c.id}">${c.nome}</option>`,
+      (c) => `<option value="${c.id}">${c.nome}${!c.ativo ? " (Inativo)" : ""}</option>`,
     );
     select.innerHTML =
       '<option value="">Projeto Interno</option>' + options.join("");
@@ -961,17 +974,123 @@ window.abrirEdicaoTimeEntry = async (id) => {
   const entry = _timeEntriesCache.find(e => e.id === id);
   if (!entry) return;
 
-  
-  await carregarSelectClientes("edit-te-cliente");
-  await carregarSelectProjetos("edit-te-projeto");
+  const selectCli = document.getElementById("edit-te-cliente");
+  const selectProj = document.getElementById("edit-te-projeto");
+  const selectTar = document.getElementById("edit-te-tarefa");
+
+  // Carregar clientes ativos (e garantir que o cliente selecionado, se houver, apareça mesmo se inativo)
+  await carregarSelectClientes("edit-te-cliente", entry.client_id || null);
+
+  // Carregar projetos filtrados pelo cliente (garantindo que o projeto atual apareça mesmo se concluído)
+  if (entry.client_id) {
+    await carregarProjetosModalFiltrados(entry.client_id, entry.project_id || null);
+  } else {
+    await carregarProjetosModalFiltrados("", entry.project_id || null);
+  }
 
   document.getElementById("edit-te-id").value = id;
   document.getElementById("edit-te-desc").value = entry.description || "";
-  document.getElementById("edit-te-cliente").value = entry.client_id || "";
-  document.getElementById("edit-te-projeto").value = entry.project_id || "";
+  if (selectCli) selectCli.value = entry.client_id || "";
+  if (selectProj) selectProj.value = entry.project_id || "";
+
+  // Carregar tarefas do projeto atual (garantindo que a tarefa atual apareça mesmo se concluída)
+  if (entry.project_id && selectTar) {
+    await carregarTarefasPorProjeto("edit-te-tarefa", entry.project_id, entry.task_id || null);
+  } else if (selectTar) {
+    selectTar.innerHTML = '<option value="">Sem Tarefa vinculada</option>';
+    selectTar.disabled = true;
+  }
 
   abrirModal("modal-editar-time-entry");
 };
+
+/**
+ * Carrega projetos filtrados para o modal de edição.
+ * Se clientId fornecido, filtra por cliente + status em_andamento.
+ * Se vazio, mostra todos em_andamento.
+ * Permite reter o projeto atualmente selecionado (selectedProjectId) mesmo se inativo/concluído.
+ */
+async function carregarProjetosModalFiltrados(clientId, selectedProjectId = null) {
+  const selectProj = document.getElementById("edit-te-projeto");
+  if (!selectProj) return;
+
+  try {
+    let projetos;
+    if (clientId) {
+      const todosProjCliente = await projectService.getByClient(clientId);
+      projetos = todosProjCliente.filter((p) => p.status === "em_andamento" || p.id === selectedProjectId);
+    } else {
+      const todosProj = await projectService.getAll();
+      projetos = todosProj.filter((p) => p.status === "em_andamento" || p.id === selectedProjectId);
+    }
+
+    const options = projetos.map(
+      (p) => `<option value="${p.id}">${p.nome}${p.status !== "em_andamento" ? " (Concluído)" : ""}</option>`
+    );
+    selectProj.innerHTML =
+      '<option value="">Sem Projeto vinculado</option>' + options.join("");
+  } catch (error) {
+    console.error("Erro ao filtrar projetos do modal:", error);
+    if (error.code === "failed-precondition" || error.message?.includes("index")) {
+      console.error(
+        "⚠️ Possível falta de Índice Composto no Firestore para projects."
+      );
+    }
+  }
+}
+
+/**
+ * Carrega tarefas de um projeto específico em um select do modal.
+ * Filtra apenas status 'todo' ou 'doing', a menos que a tarefa seja a selectedTaskId (que deve ser mantida).
+ */
+async function carregarTarefasPorProjeto(selectId, projectId, selectedTaskId) {
+  const selectEl = document.getElementById(selectId);
+  if (!selectEl) return;
+
+  try {
+    const todasTarefas = await new Promise((resolve, reject) => {
+      const unsub = taskService.listenAll((tarefas) => {
+        unsub();
+        resolve(tarefas);
+      });
+      setTimeout(() => reject(new Error("Timeout ao buscar tarefas")), 8000);
+    });
+
+    const tarefasFiltradas = todasTarefas.filter(
+      (t) => t.project_id === projectId && (t.status !== "done" || t.id === selectedTaskId)
+    );
+
+    if (tarefasFiltradas.length === 0) {
+      selectEl.innerHTML = '<option value="">Nenhuma tarefa disponível</option>';
+      selectEl.disabled = true;
+      return;
+    }
+
+    const options = tarefasFiltradas.map(
+      (t) => `<option value="${t.id}">${t.titulo}${t.status === "done" ? " (Concluída)" : ""}</option>`
+    );
+    selectEl.innerHTML =
+      '<option value="">Sem Tarefa vinculada</option>' + options.join("");
+    selectEl.disabled = false;
+
+    // Pré-selecionar a tarefa já salva (se existir e ainda estiver na lista)
+    if (selectedTaskId) {
+      const exists = tarefasFiltradas.some((t) => t.id === selectedTaskId);
+      if (exists) {
+        selectEl.value = selectedTaskId;
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao carregar tarefas do projeto:", error);
+    if (error.code === "failed-precondition" || error.message?.includes("index")) {
+      console.error(
+        "⚠️ Possível falta de Índice Composto no Firestore para tasks (project_id + status)."
+      );
+    }
+    selectEl.innerHTML = '<option value="">Sem Tarefa vinculada</option>';
+    selectEl.disabled = true;
+  }
+}
 
 
 
@@ -1274,6 +1393,32 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user) iniciarListenerTarefas();
   });
 
+  // Cascata de dropdowns no Modal de Edição (Cliente -> Projeto -> Tarefa)
+  document.getElementById("edit-te-cliente")?.addEventListener("change", async (e) => {
+    const clientId = e.target.value;
+    await carregarProjetosModalFiltrados(clientId, null);
+    
+    // Reset de tarefas ao trocar de cliente
+    const selectTar = document.getElementById("edit-te-tarefa");
+    if (selectTar) {
+      selectTar.innerHTML = '<option value="">Sem Tarefa vinculada</option>';
+      selectTar.disabled = true;
+    }
+  });
+
+  document.getElementById("edit-te-projeto")?.addEventListener("change", async (e) => {
+    const projId = e.target.value;
+    if (projId) {
+      await carregarTarefasPorProjeto("edit-te-tarefa", projId, null);
+    } else {
+      const selectTar = document.getElementById("edit-te-tarefa");
+      if (selectTar) {
+        selectTar.innerHTML = '<option value="">Sem Tarefa vinculada</option>';
+        selectTar.disabled = true;
+      }
+    }
+  });
+
   const logoutAction = async () => {
     await signOut(auth);
     window.location.href = "./login.html";
@@ -1557,6 +1702,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const id = document.getElementById("edit-te-id").value;
       const client_id = document.getElementById("edit-te-cliente").value || null;
       const project_id = document.getElementById("edit-te-projeto").value || null;
+      const task_id = document.getElementById("edit-te-tarefa")?.value || null;
       const descriptionValidation = validateOptionalText(
         document.getElementById("edit-te-desc").value,
         {
@@ -1574,6 +1720,7 @@ document.addEventListener("DOMContentLoaded", () => {
           description: descriptionValidation.value,
           client_id,
           project_id,
+          task_id,
         });
         window.fecharModal("modal-editar-time-entry");
         showToast("Apontamento atualizado com sucesso!", "success");

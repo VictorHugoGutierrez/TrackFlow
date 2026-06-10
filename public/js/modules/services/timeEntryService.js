@@ -14,13 +14,14 @@ import {
 
 export const timeEntryService = {
   
-  async create(description, projectId, clientId, startTime, endTime, durationSeconds) {
+  async create(description, projectId, clientId, startTime, endTime, durationSeconds, taskId = null) {
     try {
       const docRef = await addDoc(collection(db, "time_entries"), {
         user_id: auth.currentUser.uid,
         description: description ? description.trim() : "",
         project_id: projectId || null,
         client_id: clientId || null,
+        task_id: taskId || null,
         start_time: startTime, 
         end_time: endTime, 
         duration: durationSeconds, 
