@@ -6,7 +6,6 @@
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/pt-BR/docs/Web/CSS)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -128,9 +127,3 @@ Contribuições de código aberto são super bem-vindas! Siga as diretrizes abai
 3.  Faça o commit de suas alterações (`git commit -m 'Adiciona nova funcionalidade'`).
 4.  Envie para a branch do repositório remoto (`git push origin feature/nova-funcionalidade`).
 5.  Abra um **Pull Request**.
-
----
-
-## 📄 Licença
-
-Este projeto está licenciado sob a licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
