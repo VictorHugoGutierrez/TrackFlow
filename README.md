@@ -134,11 +134,3 @@ Contribuições de código aberto são super bem-vindas! Siga as diretrizes abai
 ## 📄 Licença
 
 Este projeto está licenciado sob a licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
-
----
-
-## 👤 Contato
-
-Desenvolvido por **Victor Hugo Gutierrez**  
-*   **GitHub:** [@VictorHugoGutierrez](https://github.com/VictorHugoGutierrez)  
-*   **Portfólio/LinkedIn:** [LinkedIn](https://www.linkedin.com/in/victorhugogutierrez)
