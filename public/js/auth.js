@@ -63,12 +63,17 @@ async function ensureUserProfile(user, details = {}) {
   await setDoc(
     userRef,
     {
-      nome: (details.nome || user.displayName || user.email || "Usuário").trim(),
+      nome: (
+        details.nome ||
+        user.displayName ||
+        user.email ||
+        "Usuário"
+      ).trim(),
       email: user.email ?? null,
       photo_url: user.photoURL ?? null,
       email_verified: Boolean(user.emailVerified),
       plano: userSnapshot.exists()
-        ? userSnapshot.data().plano ?? "freemium"
+        ? (userSnapshot.data().plano ?? "freemium")
         : "freemium",
       provider: getPrimaryProvider(user),
       provider_id: user.providerData?.[0]?.uid ?? user.uid,
@@ -92,7 +97,8 @@ function authErrorMessage(error) {
     "auth/invalid-email": "Informe um e-mail válido.",
     "auth/popup-blocked": "O navegador bloqueou o popup do Google.",
     "auth/popup-closed-by-user": "Login com Google cancelado.",
-    "auth/cancelled-popup-request": "O login com Google foi cancelado. Tente novamente.",
+    "auth/cancelled-popup-request":
+      "O login com Google foi cancelado. Tente novamente.",
     "auth/operation-not-supported-in-this-environment":
       "O navegador não suporta login por popup. Use outro navegador ou método.",
     "auth/operation-not-allowed":
@@ -118,7 +124,9 @@ function passwordResetErrorMessage(error) {
       "Muitas tentativas em sequência. Aguarde alguns minutos e tente novamente.",
   };
 
-  return messages[error.code] ?? "Não foi possível enviar o e-mail de redefinição.";
+  return (
+    messages[error.code] ?? "Não foi possível enviar o e-mail de redefinição."
+  );
 }
 
 export async function processGoogleRedirectResult() {
@@ -161,7 +169,11 @@ export async function enviarEmailRedefinicaoSenha(email) {
 }
 
 export async function cadastrarUsuario(email, senha, nome) {
-  const validation = validateSignupInput({ email, password: senha, name: nome });
+  const validation = validateSignupInput({
+    email,
+    password: senha,
+    name: nome,
+  });
 
   if (validation.error) {
     showToast(validation.error, "error");
@@ -230,13 +242,14 @@ export async function loginComGoogle() {
   } catch (error) {
     console.error("Erro no login com Google:", error);
     const popupBlocked = error.code === "auth/popup-blocked";
-    const notSupported = error.code === "auth/operation-not-supported-in-this-environment";
+    const notSupported =
+      error.code === "auth/operation-not-supported-in-this-environment";
     const cancelled = error.code === "auth/cancelled-popup-request";
 
     if (popupBlocked || notSupported || cancelled) {
       showToast(
         "Popup do Google bloqueado ou indisponível. Redirecionando para login...",
-        "info"
+        "info",
       );
       await signInWithRedirect(auth, provider);
       return;

@@ -25,7 +25,6 @@
   font-size: 1rem;
 }
 
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -54,7 +53,10 @@
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
   z-index: 60;
 }
 .back-home-button:hover,
@@ -72,7 +74,6 @@
   line-height: 1;
 }
 
-
 .btn-primario {
   background-color: var(--play-color);
   color: #fff;
@@ -81,7 +82,6 @@
   filter: brightness(1.12);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
 }
-
 
 .btn-google {
   background-color: transparent;
@@ -125,7 +125,6 @@
   color: var(--text-main);
 }
 
-
 .nav-page-btn {
   background: transparent;
   border: none;
@@ -152,7 +151,6 @@
   color: var(--accent-color);
   font-weight: 600;
 }
-
 
 .tab-link {
   background: transparent;
@@ -292,6 +290,9 @@ body.page-app button[type="submit"]:hover {
 .item-sub {
   font-size: 0.8125rem;
   color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-actions {
@@ -309,7 +310,6 @@ body.page-app button[type="submit"]:hover {
   background: none !important;
   border: none !important;
 }
-
 
 .badge {
   display: inline-block;
@@ -331,7 +331,6 @@ body.page-app button[type="submit"]:hover {
   background: rgba(234, 179, 8, 0.15);
   color: #facc15;
 }
-
 
 .btn-icon {
   background: transparent;
@@ -375,7 +374,6 @@ body.page-app button[type="submit"]:hover {
   background: rgba(16, 185, 129, 0.12);
   border-color: var(--play-color);
 }
-
 
 .modal-overlay {
   display: none;
@@ -542,9 +540,6 @@ body.page-app button[type="submit"]:hover {
   border-left-color: #a78bfa;
 }
 
-
-
-
 .rel-btn-export {
   display: inline-flex;
   align-items: center;
@@ -557,7 +552,10 @@ body.page-app button[type="submit"]:hover {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .rel-btn-export:hover {
@@ -578,14 +576,15 @@ body.page-app button[type="submit"]:hover {
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: filter 0.2s, box-shadow 0.2s;
+  transition:
+    filter 0.2s,
+    box-shadow 0.2s;
 }
 
 .rel-btn-primary:hover {
   filter: brightness(1.12);
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 }
-
 
 .rel-filter-apply {
   padding: 0.55rem 1.25rem;
@@ -596,7 +595,9 @@ body.page-app button[type="submit"]:hover {
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: filter 0.2s, box-shadow 0.2s;
+  transition:
+    filter 0.2s,
+    box-shadow 0.2s;
   align-self: flex-end;
   white-space: nowrap;
   display: inline-flex;
@@ -619,7 +620,9 @@ body.page-app button[type="submit"]:hover {
   font-weight: 500;
   cursor: pointer;
   align-self: flex-end;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   white-space: nowrap;
 }
 
@@ -627,7 +630,6 @@ body.page-app button[type="submit"]:hover {
   background: rgba(148, 163, 184, 0.1);
   color: var(--text-main);
 }
-
 
 .rel-kpi-card {
   background: var(--bg-secondary);
@@ -637,14 +639,18 @@ body.page-app button[type="submit"]:hover {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
   cursor: default;
 }
 
 .rel-kpi-card::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 3px;
   background: var(--kpi-accent, var(--accent-color));
   border-radius: 12px 12px 0 0;
@@ -693,10 +699,15 @@ body.page-app button[type="submit"]:hover {
   gap: 0.3rem;
 }
 
-.rel-kpi-delta.up      { color: var(--play-color); }
-.rel-kpi-delta.down    { color: var(--stop-color); }
-.rel-kpi-delta.neutral { color: var(--text-sub); }
-
+.rel-kpi-delta.up {
+  color: var(--play-color);
+}
+.rel-kpi-delta.down {
+  color: var(--stop-color);
+}
+.rel-kpi-delta.neutral {
+  color: var(--text-sub);
+}
 
 .rel-chart-card {
   background: var(--bg-secondary);
@@ -748,7 +759,6 @@ body.page-app button[type="submit"]:hover {
   flex-shrink: 0;
 }
 
-
 .rel-bar-chart {
   display: flex;
   align-items: flex-end;
@@ -778,7 +788,9 @@ body.page-app button[type="submit"]:hover {
   width: 40%;
   border-radius: 4px 4px 0 0;
   position: relative;
-  transition: filter 0.2s, transform 0.2s;
+  transition:
+    filter 0.2s,
+    transform 0.2s;
   cursor: pointer;
   min-width: 10px;
 }
@@ -813,8 +825,9 @@ body.page-app button[type="submit"]:hover {
   transition: opacity 0.15s;
 }
 
-.rel-bar:hover .rel-bar-tooltip { opacity: 1; }
-
+.rel-bar:hover .rel-bar-tooltip {
+  opacity: 1;
+}
 
 .rel-pie-wrap {
   display: flex;
@@ -904,7 +917,6 @@ body.page-app button[type="submit"]:hover {
   text-overflow: ellipsis;
 }
 
-
 .rel-table-card {
   background: var(--bg-secondary);
   border-radius: 12px;
@@ -949,7 +961,9 @@ body.page-app button[type="submit"]:hover {
   transition: border-color 0.2s;
 }
 
-.rel-table-search:focus-within { border-color: var(--accent-color); }
+.rel-table-search:focus-within {
+  border-color: var(--accent-color);
+}
 
 .rel-table-search i {
   color: var(--text-sub);
@@ -964,13 +978,16 @@ body.page-app button[type="submit"]:hover {
   outline: none;
   width: 180px;
   font-family: inherit;
-  
   padding: 0;
 }
 
-.rel-table-search input::placeholder { color: var(--text-sub); }
+.rel-table-search input::placeholder {
+  color: var(--text-sub);
+}
 
-.rel-table-wrapper { overflow-x: auto; }
+.rel-table-wrapper {
+  overflow-x: auto;
+}
 
 .rel-table {
   width: 100%;
@@ -993,14 +1010,26 @@ body.page-app button[type="submit"]:hover {
   transition: color 0.2s;
 }
 
-.rel-table thead th:hover { color: var(--text-main); }
+.rel-table thead th:hover {
+  color: var(--text-main);
+}
 
-.rel-table thead th.sort-asc::after  { content: ' ↑'; color: var(--accent-color); }
-.rel-table thead th.sort-desc::after { content: ' ↓'; color: var(--accent-color); }
+.rel-table thead th.sort-asc::after {
+  content: " ↑";
+  color: var(--accent-color);
+}
+.rel-table thead th.sort-desc::after {
+  content: " ↓";
+  color: var(--accent-color);
+}
 
-.rel-table tbody tr { transition: background 0.15s; }
+.rel-table tbody tr {
+  transition: background 0.15s;
+}
 
-.rel-table tbody tr:hover { background: rgba(148, 163, 184, 0.05); }
+.rel-table tbody tr:hover {
+  background: rgba(148, 163, 184, 0.05);
+}
 
 .rel-table tbody td {
   padding: 1rem 1.5rem;
@@ -1010,7 +1039,9 @@ body.page-app button[type="submit"]:hover {
   white-space: nowrap;
 }
 
-.rel-table tbody tr:last-child td { border-bottom: none; }
+.rel-table tbody tr:last-child td {
+  border-bottom: none;
+}
 
 .rel-table-avatar {
   width: 32px;
@@ -1034,7 +1065,9 @@ body.page-app button[type="submit"]:hover {
   gap: 0.5rem;
 }
 
-.rel-table-user-name { font-weight: 500; }
+.rel-table-user-name {
+  font-weight: 500;
+}
 
 .rel-table-footer {
   display: flex;
@@ -1050,7 +1083,6 @@ body.page-app button[type="submit"]:hover {
   font-size: 0.8125rem;
   color: var(--text-sub);
 }
-
 
 .rel-pagination {
   display: flex;
@@ -1070,7 +1102,10 @@ body.page-app button[type="submit"]:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
   font-family: inherit;
 }
 
@@ -1091,13 +1126,26 @@ body.page-app button[type="submit"]:hover {
   cursor: not-allowed;
 }
 
-
-.badge-pago      { background: rgba(16,185,129,0.15);  color: #34d399; }
-.badge-pendente  { background: rgba(234,179,8,0.15);   color: #facc15; }
-.badge-atrasado  { background: rgba(239,68,68,0.15);   color: #f87171; }
-.badge-cancelado { background: rgba(148,163,184,0.12); color: #94a3b8; }
-.badge-rascunho  { background: rgba(148,163,184,0.12); color: #94a3b8; }
-
+.badge-pago {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+.badge-pendente {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+.badge-atrasado {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+.badge-cancelado {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+.badge-rascunho {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
 
 .rel-table-empty {
   text-align: center;
@@ -1112,7 +1160,6 @@ body.page-app button[type="submit"]:hover {
   opacity: 0.4;
 }
 
-
 .rel-toast {
   position: fixed;
   bottom: 2rem;
@@ -1124,7 +1171,7 @@ body.page-app button[type="submit"]:hover {
   padding: 0.875rem 1.25rem;
   font-size: 0.875rem;
   color: var(--text-main);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -1135,9 +1182,11 @@ body.page-app button[type="submit"]:hover {
 }
 
 @keyframes toastIn {
-  to { transform: translateY(0); opacity: 1; }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
-
 
 #toast-container {
   position: fixed;
@@ -1159,13 +1208,17 @@ body.page-app button[type="submit"]:hover {
   padding: 0.875rem 1.25rem;
   min-width: 280px;
   max-width: 400px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.4),
+    0 8px 10px -6px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   gap: 0.75rem;
   transform: translateY(1.5rem);
   opacity: 0;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease;
   color: var(--text-main);
 }
 
@@ -1209,7 +1262,6 @@ body.page-app button[type="submit"]:hover {
   line-height: 1.25rem;
 }
 
-
 .tab-toolbar {
   display: flex;
   justify-content: flex-end;
@@ -1228,7 +1280,10 @@ body.page-app button[type="submit"]:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background-color 0.2s, filter 0.2s, box-shadow 0.2s;
+  transition:
+    background-color 0.2s,
+    filter 0.2s,
+    box-shadow 0.2s;
 }
 
 .btn-novo:hover {
@@ -1245,7 +1300,9 @@ body.page-app button[type="submit"]:hover {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: filter 0.2s, box-shadow 0.2s;
+  transition:
+    filter 0.2s,
+    box-shadow 0.2s;
 }
 
 .btn-modal-delete:hover {
@@ -1271,17 +1328,21 @@ body.page-app button[type="submit"]:hover {
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-sub);
-  width: 40px;
+  min-width: 40px;
+  width: auto;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  gap: 6px;
   height: 40px;
-  padding: 0;
   border-radius: var(--border-radius);
   cursor: pointer;
   font-size: 0.875rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 40px;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .min-w-0 {
@@ -1373,7 +1434,10 @@ body.page-app button[type="submit"]:hover {
   border: 1px solid var(--border-color);
   height: 42px;
   font-weight: 600;
-  transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .btn-billing-generate:hover {
@@ -1391,7 +1455,9 @@ body.page-app button[type="submit"]:hover {
   border-radius: var(--border-radius);
   font-size: 0.9375rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .billing-filter-group input:focus,
@@ -1542,7 +1608,6 @@ body.page-app button[type="submit"]:hover {
   margin-top: 0;
 }
 
-/* Restrições rigorosas globais para ícones dentro de botões */
 button svg,
 button img,
 button i,

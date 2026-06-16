@@ -10,9 +10,7 @@ let startTime = null;
 let secondsElapsed = 0;
 
 // Caches locais para o timer
-let _clientesTimerCache = [];
 let _projetosTimerCache = [];
-let _tarefasTimerCache = [];
 
 export function initTimer() {
   const btnToggle = document.getElementById("timer-btn-toggle");
@@ -29,7 +27,6 @@ export function initTimer() {
     selectCli.addEventListener("change", async () => {
       const clientId = selectCli.value;
       await carregarProjetosTimerFiltrados(clientId);
-      // Reset tarefa ao trocar cliente
       resetSelectTarefa(selectTar);
     });
   }
@@ -46,7 +43,6 @@ export function initTimer() {
         }
       }
 
-      // Carregar tarefas do projeto selecionado
       if (projId) {
         await carregarTarefasTimer(projId);
       } else {
@@ -55,7 +51,6 @@ export function initTimer() {
     });
   }
 
-  // Carga inicial dos dropdowns
   carregarDropdownsTimer();
 }
 
@@ -70,7 +65,6 @@ export async function carregarDropdownsTimer() {
       projectService.getAll("em_andamento"),
     ]);
 
-    _clientesTimerCache = clientes;
     _projetosTimerCache = projetos;
 
     const selectCli = document.getElementById("timer-cliente");
@@ -93,7 +87,6 @@ export async function carregarDropdownsTimer() {
         '<option value="">Vincular Projeto</option>' + options.join("");
     }
 
-    // Tarefa sempre reseta na carga inicial
     resetSelectTarefa(selectTar);
   } catch (error) {
     console.error("Erro ao carregar dropdowns do timer:", error);
@@ -116,11 +109,9 @@ async function carregarProjetosTimerFiltrados(clientId) {
   try {
     let projetos;
     if (clientId) {
-      // Busca projetos do cliente com status em_andamento
       const todosProjCliente = await projectService.getByClient(clientId);
       projetos = todosProjCliente.filter((p) => p.status === "em_andamento");
     } else {
-      // Sem cliente selecionado: todos em_andamento
       projetos = await projectService.getAll("em_andamento");
     }
 
@@ -163,8 +154,6 @@ async function carregarTarefasTimer(projectId) {
     const tarefasFiltradas = todasTarefas.filter(
       (t) => t.project_id === projectId && t.status !== "done"
     );
-
-    _tarefasTimerCache = tarefasFiltradas;
 
     if (tarefasFiltradas.length === 0) {
       selectTar.innerHTML = '<option value="">Nenhuma tarefa disponível</option>';
@@ -248,7 +237,6 @@ async function stopTimer() {
   const projVal = selectProj ? selectProj.value : "";
   const taskVal = selectTar ? selectTar.value : "";
 
-  // Reset visual do cronômetro
   const btnToggle = document.getElementById("timer-btn-toggle");
   const cronometro = document.getElementById("timer-cronometro");
   const icon = document.getElementById("timer-icon");
@@ -262,13 +250,11 @@ async function stopTimer() {
     icon.className = "fa-solid fa-play";
   }
 
-  // Reset dos inputs
   if (inputDesc) inputDesc.value = "";
   if (selectCli) selectCli.value = "";
   if (selectProj) selectProj.value = "";
   resetSelectTarefa(selectTar);
 
-  // Recarregar projetos (sem filtro de cliente) após reset
   carregarProjetosTimerFiltrados("");
 
   // Salvar a entrada de tempo com task_id (Fricção Zero: null se não selecionado)

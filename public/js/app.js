@@ -1427,6 +1427,31 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-config-rapida")?.addEventListener("click", logoutAction);
   document.getElementById("btnSairConfig")?.addEventListener("click", logoutAction);
 
+  // Controle do menu lateral no mobile (Sidebar)
+  const btnMenuMobile = document.getElementById("btn-menu-mobile");
+  const sidebar = document.querySelector(".sidebar");
+
+  btnMenuMobile?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    sidebar?.classList.toggle("active");
+  });
+
+  // Fechar sidebar ao clicar em um link interno
+  sidebar?.querySelectorAll(".sidebar-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+    });
+  });
+
+  // Fechar sidebar ao clicar fora dela
+  document.addEventListener("click", (e) => {
+    if (sidebar && sidebar.classList.contains("active")) {
+      if (!sidebar.contains(e.target) && e.target !== btnMenuMobile && !btnMenuMobile?.contains(e.target)) {
+        sidebar.classList.remove("active");
+      }
+    }
+  });
+
   
   const btnTema = document.getElementById("btn-tema");
   const body    = document.body;

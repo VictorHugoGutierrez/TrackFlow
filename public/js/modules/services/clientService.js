@@ -8,7 +8,6 @@ import {
   where,
   doc,
   updateDoc,
-  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
 export const clientService = {
@@ -43,7 +42,6 @@ export const clientService = {
     }
   },
 
-  
   async getAll() {
     try {
       const q = query(
@@ -94,23 +92,25 @@ export const clientService = {
         atualizado_em: new Date().toISOString(),
       });
 
-      
       const qProj = query(
         collection(db, "projects"),
         where("user_id", "==", userId),
         where("client_id", "==", clientId),
       );
       const snapProj = await getDocs(qProj);
-      const batchPromises = snapProj.docs.map((d) => updateDoc(d.ref, { client_id: null, atualizado_em: new Date().toISOString() }));
+      const batchPromises = snapProj.docs.map((d) =>
+        updateDoc(d.ref, {
+          client_id: null,
+          atualizado_em: new Date().toISOString(),
+        }),
+      );
       await Promise.all(batchPromises);
-
     } catch (error) {
       console.error("Erro ao desativar cliente:", error);
       throw error;
     }
   },
 
-  
   async reactivate(clientId) {
     try {
       const ref = doc(db, "clients", clientId);

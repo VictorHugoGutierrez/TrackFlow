@@ -2,11 +2,10 @@ import { db, auth } from "../../config/firebase.js";
 import {
   doc,
   getDoc,
-  setDoc
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
 export const settingsService = {
-  
   async get() {
     try {
       const snap = await getDoc(doc(db, "user_settings", auth.currentUser.uid));
@@ -20,18 +19,20 @@ export const settingsService = {
     }
   },
 
-  
   async update(dados) {
     try {
       const ref = doc(db, "user_settings", auth.currentUser.uid);
-      await setDoc(ref, {
-        ...dados,
-        atualizado_em: new Date().toISOString()
-      }, { merge: true });
+      await setDoc(
+        ref,
+        {
+          ...dados,
+          atualizado_em: new Date().toISOString(),
+        },
+        { merge: true },
+      );
     } catch (error) {
       console.error("Erro ao atualizar configurações do usuário:", error);
       throw error;
     }
-  }
+  },
 };
-

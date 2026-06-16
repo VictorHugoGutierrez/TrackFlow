@@ -22,9 +22,28 @@
     <link rel="icon" type="image/png" href="images/Trackflow.png" />
   </head>
   <body class="page-app" data-theme="dark">
-    
     <header class="app-header">
       <div class="app-header-left">
+        <button
+          id="btn-menu-mobile"
+          class="btn-menu-mobile"
+          aria-label="Abrir Menu"
+        >
+          <svg
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
+        </button>
         <h1 class="app-logo">
           <img
             src="images/Trackflow.png"
@@ -35,7 +54,6 @@
         </h1>
       </div>
 
-      
       <div class="app-header-center">
         <div class="header-timer-widget">
           <input
@@ -91,19 +109,13 @@
         >
           <i class="fa-solid fa-stopwatch"></i>
         </button>
-        <button
-          id="btn-tema"
-          title="Alternar tema"
-          class="btn-header-config"
-        >
+        <button id="btn-tema" title="Alternar tema" class="btn-header-config">
           <i class="fa-solid fa-moon"></i>
         </button>
       </div>
     </header>
 
-    
     <div class="app-container">
-      
       <aside class="sidebar">
         <nav class="sidebar-menu">
           <button
@@ -169,33 +181,24 @@
         </div>
       </aside>
 
-      
       <main>
-        
         <section id="page-dashboard" class="page-content">
           <div class="page-section-wrapper">
-            
             <div class="mb-15">
               <h2 class="page-title">
                 <i class="fa-solid fa-gauge-high"></i> Dashboard
               </h2>
-              <p
-                class="settings-subtitle"
-              >
+              <p class="settings-subtitle">
                 Bem-vindo ao TrackFlow. Gerencie suas horas e atividades com
                 fricção zero.
               </p>
             </div>
 
-            
             <div class="metrics-grid">
-              
               <div class="metric-card">
                 <div class="metric-card-header">
                   <span>Total Hoje</span>
-                  <i
-                    class="fa-solid fa-calendar-day text-play"
-                  ></i>
+                  <i class="fa-solid fa-calendar-day text-play"></i>
                 </div>
                 <div class="metric-card-value" id="metric-total-hoje">0.0h</div>
                 <div class="metric-card-footer">
@@ -213,13 +216,10 @@
                 </div>
               </div>
 
-              
               <div class="metric-card">
                 <div class="metric-card-header">
                   <span>Total Semana</span>
-                  <i
-                    class="fa-solid fa-calendar-week text-accent"
-                  ></i>
+                  <i class="fa-solid fa-calendar-week text-accent"></i>
                 </div>
                 <div class="metric-card-value" id="metric-total-semana">
                   0.0h
@@ -246,33 +246,25 @@
                 </div>
               </div>
 
-              
               <div class="metric-card">
                 <div class="metric-card-header">
                   <span>Receita Estimada</span>
-                  <i
-                    class="fa-solid fa-circle-dollar-to-slot text-warning"
-                  ></i>
+                  <i class="fa-solid fa-circle-dollar-to-slot text-warning"></i>
                 </div>
                 <div class="metric-card-value" id="metric-receita-estimada">
                   R$ 0,00
                 </div>
                 <div class="metric-card-footer">
-                  <span
-                    id="metric-receita-detalhe"
-                    class="text-sub fs-sm"
+                  <span id="metric-receita-detalhe" class="text-sub fs-sm"
                     >0 registros faturáveis hoje</span
                   >
                 </div>
               </div>
 
-              
               <div class="metric-card">
                 <div class="metric-card-header">
                   <span>Projetos Ativos</span>
-                  <i
-                    class="fa-solid fa-diagram-project text-purple"
-                  ></i>
+                  <i class="fa-solid fa-diagram-project text-purple"></i>
                 </div>
                 <div class="metric-card-value" id="metric-projetos-ativos">
                   0
@@ -323,7 +315,6 @@
               </section>
             </div>
 
-            
             <div class="activities-panel">
               <div class="activities-panel-header">
                 <h3>Atividades de Hoje</h3>
@@ -365,15 +356,12 @@
           </div>
         </section>
 
-        
         <section id="page-gestao" class="page-content d-none">
           <div class="page-section-wrapper">
-            
             <h2 class="page-title">
               <i class="fa-solid fa-folder-open"></i> Gestão
             </h2>
 
-            
             <nav class="tabs-nav" id="tabs-gestao">
               <button
                 class="tab-link active"
@@ -392,7 +380,6 @@
               </button>
             </nav>
 
-            
             <section id="tab-clientes" class="tab-content">
               <div class="tab-toolbar">
                 <button id="btn-novo-cliente" class="btn-novo">
@@ -402,11 +389,7 @@
               <ul id="lista-clientes" class="data-list"></ul>
             </section>
 
-            
-            <section
-              id="tab-projetos"
-              class="tab-content d-none"
-            >
+            <section id="tab-projetos" class="tab-content d-none">
               <div class="tab-toolbar">
                 <button id="btn-novo-projeto" class="btn-novo">
                   <i class="fa-solid fa-plus"></i> Novo Projeto
@@ -415,7 +398,6 @@
               <ul id="lista-projetos" class="data-list"></ul>
             </section>
 
-            
             <section id="tab-tarefas" class="tab-content d-none">
               <div class="tab-toolbar">
                 <button id="btn-nova-tarefa" class="btn-novo">
@@ -427,22 +409,15 @@
           </div>
         </section>
 
-        
-        <section
-          id="page-relatorios"
-          class="page-content d-none"
-        >
+        <section id="page-relatorios" class="page-content d-none">
           <div class="rel-page">
-            
             <div class="rel-header">
               <div class="rel-header-left">
                 <h2>
                   <i class="fa-solid fa-chart-bar"></i>
                   Relatórios
                 </h2>
-                <p>
-                  Visão consolidada de faturas, recebimentos e pendências.
-                </p>
+                <p>Visão consolidada de faturas, recebimentos e pendências.</p>
               </div>
               <div class="rel-header-actions">
                 <button
@@ -466,7 +441,6 @@
               </div>
             </div>
 
-            
             <div
               class="rel-filters"
               role="search"
@@ -487,7 +461,6 @@
                 </select>
               </div>
 
-              
               <div id="rel-filtro-custom-datas" class="d-none">
                 <div class="rel-filter-group">
                   <label for="rel-filtro-inicio">Data Início</label>
@@ -509,10 +482,7 @@
 
               <div class="rel-filter-group">
                 <label for="rel-filtro-categoria">Tipo</label>
-                <select
-                  id="rel-filtro-categoria"
-                  aria-label="Filtrar por tipo"
-                >
+                <select id="rel-filtro-categoria" aria-label="Filtrar por tipo">
                   <option value="todos">Todas as faturas</option>
                   <option value="com_cliente">Com cliente</option>
                   <option value="interno">Projeto interno</option>
@@ -550,18 +520,13 @@
               </button>
             </div>
 
-            
             <div
               id="rel-kpi-grid"
               class="rel-kpi-grid"
               aria-label="Indicadores chave de desempenho"
-            >
-              
-            </div>
+            ></div>
 
-            
             <div class="rel-charts-grid">
-              
               <div class="rel-chart-card">
                 <div class="rel-chart-header">
                   <h3 class="rel-chart-title">
@@ -570,15 +535,11 @@
                   </h3>
                   <div class="rel-chart-legend" aria-hidden="true">
                     <div class="rel-legend-item">
-                      <span
-                        class="rel-legend-dot bg-play"
-                      ></span>
+                      <span class="rel-legend-dot bg-play"></span>
                       Emitido
                     </div>
                     <div class="rel-legend-item">
-                      <span
-                        class="rel-legend-dot bg-stop"
-                      ></span>
+                      <span class="rel-legend-dot bg-stop"></span>
                       Recebido
                     </div>
                   </div>
@@ -586,7 +547,6 @@
                 <div id="rel-grafico-barras"></div>
               </div>
 
-              
               <div class="rel-chart-card">
                 <div class="rel-chart-header">
                   <h3 class="rel-chart-title">
@@ -598,7 +558,6 @@
               </div>
             </div>
 
-            
             <div class="rel-chart-card mb-2">
               <div class="rel-chart-header">
                 <h3 class="rel-chart-title">
@@ -607,9 +566,7 @@
                 </h3>
                 <div class="rel-chart-legend" aria-hidden="true">
                   <div class="rel-legend-item">
-                    <span
-                      class="rel-legend-dot bg-blue"
-                    ></span>
+                    <span class="rel-legend-dot bg-blue"></span>
                     Total emitido
                   </div>
                 </div>
@@ -617,7 +574,6 @@
               <div id="rel-grafico-linha"></div>
             </div>
 
-            
             <div class="rel-table-card">
               <div class="rel-table-top">
                 <h3>
@@ -687,9 +643,7 @@
                       </th>
                     </tr>
                   </thead>
-                  <tbody id="rel-tbody">
-                    
-                  </tbody>
+                  <tbody id="rel-tbody"></tbody>
                 </table>
               </div>
 
@@ -705,39 +659,28 @@
                   id="rel-paginacao"
                   class="rel-pagination"
                   aria-label="Paginação da tabela"
-                >
-                  
-                </nav>
+                ></nav>
               </div>
             </div>
-            
           </div>
-          
         </section>
 
-        
         <section id="page-faturas" class="page-content d-none">
           <div class="page-section-wrapper">
-            
             <div class="mb-15">
               <h2 class="page-title">
                 <i class="fa-solid fa-file-invoice-dollar"></i> Relatórios e
                 Faturamento
               </h2>
-              <p
-                class="settings-subtitle"
-              >
+              <p class="settings-subtitle">
                 Gere relatórios financeiros e salve faturas das horas
                 trabalhadas.
               </p>
             </div>
 
-            
             <div class="billing-filter-card">
               <div class="billing-filter-group">
-                <label
-                  for="billing-month"
-                  class="billing-filter-label"
+                <label for="billing-month" class="billing-filter-label"
                   >Mês de Referência</label
                 >
                 <input
@@ -748,9 +691,7 @@
                 />
               </div>
               <div class="billing-filter-group">
-                <label
-                  for="billing-client"
-                  class="billing-filter-label"
+                <label for="billing-client" class="billing-filter-label"
                   >Cliente</label
                 >
                 <select id="billing-client" class="mt-025">
@@ -765,7 +706,6 @@
               </button>
             </div>
 
-            
             <div class="billing-stats-grid">
               <div class="metric-card billing-stat-card">
                 <div class="metric-card-header mb-025">
@@ -792,56 +732,22 @@
               </button>
             </div>
 
-            
-            <div
-              class="billing-table-wrapper"
-            >
-              <h3
-                class="billing-table-title"
-              >
-                Histórico de Faturas
-              </h3>
+            <div class="billing-table-wrapper">
+              <h3 class="billing-table-title">Histórico de Faturas</h3>
               <table class="rel-table billing-table w-100 text-left">
                 <thead>
                   <tr class="border-b">
-                    <th
-                      class="billing-th"
-                    >
-                      Cliente
-                    </th>
-                    <th
-                      class="billing-th"
-                    >
-                      Mês
-                    </th>
-                    <th
-                      class="billing-th"
-                    >
-                      Total de Horas
-                    </th>
-                    <th
-                      class="billing-th"
-                    >
-                      Valor Total
-                    </th>
-                    <th
-                      class="billing-th"
-                    >
-                      Status
-                    </th>
-                    <th
-                      class="billing-th text-right"
-                    >
-                      Ações
-                    </th>
+                    <th class="billing-th">Cliente</th>
+                    <th class="billing-th">Mês</th>
+                    <th class="billing-th">Total de Horas</th>
+                    <th class="billing-th">Valor Total</th>
+                    <th class="billing-th">Status</th>
+                    <th class="billing-th text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="billing-invoices-tbody">
                   <tr>
-                    <td
-                      colspan="6"
-                      class="billing-td-empty"
-                    >
+                    <td colspan="6" class="billing-td-empty">
                       Nenhuma fatura cadastrada.
                     </td>
                   </tr>
@@ -851,36 +757,22 @@
           </div>
         </section>
 
-        
-        <section
-          id="page-configuracoes"
-          class="page-content d-none"
-        >
+        <section id="page-configuracoes" class="page-content d-none">
           <div class="page-section-wrapper">
             <h2 class="page-title">
               <i class="fa-solid fa-sliders"></i> Configurações
             </h2>
-            <div
-              class="config-card"
-            >
+            <div class="config-card">
               <div>
-                <h4 class="config-section-title">
-                  Preferências do TrackFlow
-                </h4>
+                <h4 class="config-section-title">Preferências do TrackFlow</h4>
                 <p class="text-sub fs-sm">
                   Ajuste seus valores padrão e taxas horárias de cobrança.
                 </p>
               </div>
 
-              <form
-                id="form-configuracoes"
-                class="config-form"
-                novalidate
-              >
+              <form id="form-configuracoes" class="config-form" novalidate>
                 <div class="form-group">
-                  <label for="config-taxa-padrao"
-                    >Taxa Horária Padrão</label
-                  >
+                  <label for="config-taxa-padrao">Taxa Horária Padrão</label>
                   <input
                     type="number"
                     id="config-taxa-padrao"
@@ -906,29 +798,37 @@
                 </div>
                 <div class="form-group config-row">
                   <div class="config-col">
-                    <label for="config-pomodoro-foco">Tempo de Foco (min)</label>
-                    <input type="number" id="config-pomodoro-foco" value="25" min="1" max="120" />
+                    <label for="config-pomodoro-foco"
+                      >Tempo de Foco (min)</label
+                    >
+                    <input
+                      type="number"
+                      id="config-pomodoro-foco"
+                      value="25"
+                      min="1"
+                      max="120"
+                    />
                   </div>
                   <div class="config-col">
-                    <label for="config-pomodoro-pausa">Tempo de Pausa (min)</label>
-                    <input type="number" id="config-pomodoro-pausa" value="5" min="1" max="60" />
+                    <label for="config-pomodoro-pausa"
+                      >Tempo de Pausa (min)</label
+                    >
+                    <input
+                      type="number"
+                      id="config-pomodoro-pausa"
+                      value="5"
+                      min="1"
+                      max="60"
+                    />
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  class="btn btn-primario btn-config-save"
-                >
+                <button type="submit" class="btn btn-primario btn-config-save">
                   Salvar Configurações
                 </button>
               </form>
 
-              <div
-                class="config-actions"
-              >
-                <button
-                  id="btnSairConfig"
-                  class="btn btn-danger"
-                >
+              <div class="config-actions">
+                <button id="btnSairConfig" class="btn btn-danger">
                   <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
                 </button>
               </div>
@@ -938,7 +838,6 @@
       </main>
     </div>
 
-    
     <div id="modal-editar-cliente" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -985,7 +884,6 @@
       </div>
     </div>
 
-    
     <div id="modal-editar-projeto" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1058,7 +956,6 @@
       </div>
     </div>
 
-    
     <div id="modal-editar-tarefa" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1113,7 +1010,7 @@
     <script>
       new window.VLibras.Widget("https://vlibras.gov.br/app");
     </script>
-    
+
     <div id="modal-novo-cliente" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1160,7 +1057,6 @@
       </div>
     </div>
 
-    
     <div id="modal-novo-projeto" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1225,7 +1121,6 @@
       </div>
     </div>
 
-    
     <div id="modal-nova-tarefa" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1270,7 +1165,6 @@
       </div>
     </div>
 
-    
     <div id="modal-editar-time-entry" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1326,7 +1220,6 @@
       </div>
     </div>
 
-    
     <div id="confirm-modal-overlay" class="modal-overlay">
       <div class="modal-box modal-box-sm">
         <div class="modal-header">
@@ -1344,10 +1237,7 @@
           </button>
         </div>
         <div class="mb-15">
-          <p
-            id="confirm-modal-message"
-            class="confirm-msg"
-          ></p>
+          <p id="confirm-modal-message" class="confirm-msg"></p>
         </div>
         <div class="modal-footer mt-0">
           <button
@@ -1368,7 +1258,6 @@
       </div>
     </div>
 
-    
     <div id="modal-enviar-email-fatura" class="modal-overlay">
       <div class="modal-box">
         <div class="modal-header">
@@ -1393,25 +1282,16 @@
           aria-live="polite"
         ></p>
         <div class="modal-footer">
-          <button
-            type="button"
-            id="btn-email-nao"
-            class="btn-modal-cancel"
-          >
+          <button type="button" id="btn-email-nao" class="btn-modal-cancel">
             Não
           </button>
-          <button
-            type="button"
-            id="btn-email-sim"
-            class="btn-modal-save"
-          >
+          <button type="button" id="btn-email-sim" class="btn-modal-save">
             Sim
           </button>
         </div>
       </div>
     </div>
 
-    
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
     <script type="module" src="js/app.js"></script>

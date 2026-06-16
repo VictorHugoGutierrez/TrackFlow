@@ -1,8 +1,8 @@
 import { showToast } from "./ui.js";
 
 let _pomodoroInterval = null;
-let _tempoRestante = 0; 
-let _modoAtual = "inativo"; 
+let _tempoRestante = 0;
+let _modoAtual = "inativo";
 let _configs = { foco: 25, pausa: 5 };
 
 export function initPomodoro(settings) {
@@ -15,7 +15,6 @@ export function initPomodoro(settings) {
 
   const btnToggle = document.getElementById("btn-pomodoro-toggle");
   if (btnToggle) {
-    
     const newBtn = btnToggle.cloneNode(true);
     btnToggle.parentNode.replaceChild(newBtn, btnToggle);
     newBtn.addEventListener("click", togglePomodoro);
@@ -46,7 +45,7 @@ function iniciarFoco() {
 function iniciarPausa() {
   _modoAtual = "pausa";
   _tempoRestante = _configs.pausa * 60;
-  showToast(`Pausa iniciada: ${_configs.pausa} minutos. Relaxe!`, "success");
+  showToast(`Pausa iniciada: ${_configs.pausa} minutes. Relaxe!`, "success");
   atualizarUi();
   iniciarContagem();
 }
@@ -61,14 +60,13 @@ function pararPomodoro() {
 
 function iniciarContagem() {
   if (_pomodoroInterval) clearInterval(_pomodoroInterval);
-  
+
   _pomodoroInterval = setInterval(() => {
     _tempoRestante--;
     if (_tempoRestante <= 0) {
       clearInterval(_pomodoroInterval);
       if (_modoAtual === "foco") {
         showToast("Tempo de Foco concluído! Iniciando pausa...", "success");
-        
         iniciarPausa();
       } else if (_modoAtual === "pausa") {
         showToast("Pausa concluída! Pronto para outro foco?", "success");
@@ -92,7 +90,7 @@ function atualizarUi() {
   } else {
     btnToggle.classList.add("running");
     btnToggle.style.color = _modoAtual === "foco" ? "var(--play-color)" : "var(--accent-color)";
-    
+
     const mins = Math.floor(_tempoRestante / 60).toString().padStart(2, "0");
     const secs = (_tempoRestante % 60).toString().padStart(2, "0");
     btnToggle.innerHTML = `<i class="fa-solid fa-stopwatch"></i> ${mins}:${secs}`;

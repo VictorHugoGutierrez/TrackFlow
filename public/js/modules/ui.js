@@ -1,8 +1,5 @@
 
 
-
-
-
 export function showToast(mensagem, tipo = "success", duracao = 3000) {
   const container = document.getElementById("toast-container");
   if (!container) return;
@@ -22,20 +19,15 @@ export function showToast(mensagem, tipo = "success", duracao = 3000) {
 
   container.appendChild(toast);
 
-  
   void toast.offsetHeight;
   toast.classList.add("toast-visible");
 
-  
   setTimeout(() => {
     toast.classList.remove("toast-visible");
     toast.classList.add("toast-hiding");
     toast.addEventListener("transitionend", () => toast.remove(), { once: true });
   }, duracao);
 }
-
-
-
 
 export function showConfirm(
   mensagem,
@@ -44,18 +36,15 @@ export function showConfirm(
   return new Promise((resolve) => {
     const overlay = document.getElementById("confirm-modal-overlay");
     if (!overlay) {
-      
       resolve(window.confirm(mensagem));
       return;
     }
 
-    
     const msgEl = overlay.querySelector("#confirm-modal-message");
     const btnConfirm = overlay.querySelector("#confirm-modal-btn-ok");
     if (msgEl) msgEl.textContent = mensagem;
     if (btnConfirm) btnConfirm.textContent = tituloBotaoConfirm;
 
-    
     overlay.classList.add("open");
 
     function cleanup() {
